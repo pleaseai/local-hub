@@ -17,6 +17,13 @@
         { "type": "test", "section": "Tests", "hidden": true },
         { "type": "build", "section": "Build System", "hidden": true },
         { "type": "ci", "section": "Continuous Integration", "hidden": true }
+      ],
+      "extra-files": [
+        "npm/local-hub/package.json",
+        "npm/darwin-arm64/package.json",
+        "npm/darwin-x64/package.json",
+        "npm/linux-arm64/package.json",
+        "npm/linux-x64/package.json"
       ]
     }
   },

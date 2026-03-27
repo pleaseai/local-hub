@@ -1,0 +1,12 @@
+{
+  "name": "@pleaseai/local-hub-darwin-arm64",
+  "version": "0.3.0",
+  "description": "local-hub binary for macOS ARM64",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pleaseai/local-hub"
+  },
+  "os": ["darwin"],
+  "cpu": ["arm64"]
+}

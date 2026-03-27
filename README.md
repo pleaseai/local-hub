@@ -33,6 +33,12 @@ fetch  ──(HTTP :8787)───→  (cache)
 brew install pleaseai/tap/local-hub
 ```
 
+### npm
+
+```bash
+npm install -g local-hub
+```
+
 ### Cargo
 
 ```bash

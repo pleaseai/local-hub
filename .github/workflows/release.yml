@@ -19,6 +19,7 @@ jobs:
     outputs:
       release_created: ${{ steps.release.outputs['crates/server--release_created'] }}
       tag_name: ${{ steps.release.outputs['crates/server--tag_name'] }}
+      version: ${{ steps.release.outputs['crates/server--version'] }}
     steps:
       - uses: actions/create-github-app-token@v2
         id: app-token
@@ -43,15 +44,19 @@ jobs:
           - os: macos-latest
             target: x86_64-apple-darwin
             artifact: local-hub-darwin-x64
+            npm-dir: darwin-x64
           - os: macos-latest
             target: aarch64-apple-darwin
             artifact: local-hub-darwin-arm64
+            npm-dir: darwin-arm64
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             artifact: local-hub-linux-x64
+            npm-dir: linux-x64
           - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
             artifact: local-hub-linux-arm64
+            npm-dir: linux-arm64
 
     steps:
       - uses: actions/checkout@v4
@@ -94,6 +99,17 @@ jobs:
           name: ${{ matrix.artifact }}
           path: dist/${{ matrix.artifact }}.tar.gz*
 
+      - name: Prepare npm package
+        run: |
+          mkdir -p npm-pkg/bin
+          cp target/${{ matrix.target }}/release/local-hub npm-pkg/bin/local-hub
+          cp npm/${{ matrix.npm-dir }}/package.json npm-pkg/package.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-${{ matrix.npm-dir }}
+          path: npm-pkg/
+
   upload-release-assets:
     needs: [release-please, build-binaries]
     if: ${{ needs.release-please.outputs.release_created }}
@@ -113,6 +129,52 @@ jobs:
           gh release upload ${{ needs.release-please.outputs.tag_name }} \
             artifacts/* \
             --clobber
+
+  npm-publish:
+    needs: [release-please, build-binaries]
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    strategy:
+      matrix:
+        npm-dir: [darwin-arm64, darwin-x64, linux-arm64, linux-x64]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: npm-${{ matrix.npm-dir }}
+          path: pkg
+
+      - run: chmod +x pkg/bin/local-hub
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+
+      - run: npm publish --provenance --access public
+        working-directory: pkg
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  npm-publish-main:
+    needs: [release-please, npm-publish]
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+
+      - run: npm publish --provenance --access public
+        working-directory: npm/local-hub
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   update-homebrew-formula:
     needs: [release-please, upload-release-assets]
