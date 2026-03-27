@@ -17,7 +17,8 @@
     "vitest@pleaseai": true,
     "fetch@pleaseai": true,
     "claude-code-setup@claude-plugins-official": true,
-    "gardening@passionfactory": true
+    "gardening@passionfactory": true,
+    "rust-lsp@code-intelligence": true
   },
   "extraKnownMarketplaces": {
     "passionfactory": {
