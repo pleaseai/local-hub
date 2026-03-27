@@ -5,7 +5,31 @@ Local GitHub API cache proxy — reduce latency and save rate limits.
 ## References
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — Bird's-eye view of the codebase
-- [.please/INDEX.md](.please/INDEX.md) — Workspace navigation (tracks, specs, decisions)
+- [.please/INDEX.md](.please/INDEX.md) — Workspace navigation
+
+### .please/ Directory
+
+```
+.please/
+  config.yml                          # Workspace settings (language: en)
+  INDEX.md                            # Central navigation
+  docs/
+    knowledge/
+      product.md                      # Product definition & roadmap
+      product-guidelines.md           # Design principles & UX guidelines
+      tech-stack.md                   # Technology choices & dependencies
+      workflow.md                     # Development workflow & TDD conventions
+    tracks/
+      index.md                        # Active/completed tracks index
+      tech-debt-tracker.md            # Tech debt registry
+      active/                         # Active implementation tracks
+      completed/                      # Archived tracks
+    product-specs/index.md            # Product-level specs
+    decisions/index.md                # Architecture Decision Records
+    investigations/                   # Bug investigation reports
+    research/                         # Research documents
+    references/                       # External references
+```
 
 ## Tech Stack
 
