@@ -3,6 +3,7 @@ import type { UIMessage } from "ai";
 import { convertToModelMessages, generateId, stepCountIs, streamText, tool } from "ai";
 import { z } from "zod";
 import { getOctokitFromSession, getGitHubToken } from "@/lib/ai-auth";
+import { createAIProvider, detectProviderType, isLocalProvider, stripProviderPrefix } from "@/lib/ai-providers";
 import {
 	getOrCreateConversation,
 	updateActiveStreamId,
@@ -3422,7 +3423,14 @@ export async function POST(req: Request) {
 
 	try {
 		const result = streamText({
-			model: createOpenRouter({ apiKey })(modelId),
+			model: (() => {
+				const providerType = detectProviderType(modelId);
+				const actualModelId = stripProviderPrefix(modelId);
+				if (isLocalProvider(providerType)) {
+					return createAIProvider(providerType)(actualModelId);
+				}
+				return createOpenRouter({ apiKey })(actualModelId);
+			})(),
 			system: systemPrompt,
 			messages: await convertToModelMessages(messages),
 			tools: tools as Parameters<typeof streamText>[0]["tools"],
@@ -3437,8 +3445,8 @@ export async function POST(req: Request) {
 					.then((usage) =>
 						logTokenUsage({
 							userId,
-							provider: "openrouter",
-							modelId,
+							provider: detectProviderType(modelId),
+							modelId: stripProviderPrefix(modelId),
 							taskType: "ghost",
 							usage,
 							isCustomApiKey,

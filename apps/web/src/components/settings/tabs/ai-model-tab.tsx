@@ -11,8 +11,15 @@ interface AIModelTabProps {
 	onUpdate: (updates: Partial<UserSettings>) => Promise<void>;
 }
 
+const CLI_PROVIDERS = [
+	{ id: "claude-code:claude-sonnet-4-6" as const, label: "Claude Code", desc: "Local Claude Code CLI" },
+	{ id: "gemini-cli:gemini-2.5-pro" as const, label: "Gemini CLI", desc: "Local Gemini CLI" },
+	{ id: "codex-cli:codex" as const, label: "Codex CLI", desc: "Local Codex CLI" },
+];
+
 const MODELS = [
 	{ id: "auto" as const, label: "Auto", desc: "Best model for the task — Default" },
+	...CLI_PROVIDERS,
 	...SELECTABLE_MODELS,
 ];
 
