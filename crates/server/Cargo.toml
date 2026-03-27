@@ -27,3 +27,7 @@ thiserror.workspace = true
 redb.workspace = true
 http.workspace = true
 tower.workspace = true
+anyhow.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
