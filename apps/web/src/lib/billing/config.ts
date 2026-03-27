@@ -16,34 +16,3 @@ export function getBillingErrorCode(result: {
 	if (result.spendingLimitReached) return BILLING_ERROR.SPENDING_LIMIT_REACHED;
 	return BILLING_ERROR.MESSAGE_LIMIT_REACHED;
 }
-
-// ── Welcome Credit ──
-
-export const WELCOME_CREDIT_TYPE = "welcome_credit";
-export const WELCOME_CREDIT_USD = 10;
-export const WELCOME_CREDIT_EXPIRY_DAYS = 30;
-
-// ── Fixed Costs ──
-
-export const FIXED_COSTS = {
-	// E2B sandbox session
-	// Currently disabled, only AI model usage is billed
-	sandbox: 0,
-} as const;
-
-// ── Spending Limit ──
-
-export const MIN_CAP_USD = 0.01;
-
-// ── Stripe ──
-
-/**
- * 1 USD = 10,000 units.
- * Stripe meter price must be set to $0.0001 per unit.
- */
-export const COST_TO_UNITS = 10_000;
-export const STRIPE_MAX_EVENT_AGE_DAYS = 35;
-
-// ── Subscription ──
-
-export const ACTIVE_SUBSCRIPTION_STATUSES = ["active", "trialing"] as const;

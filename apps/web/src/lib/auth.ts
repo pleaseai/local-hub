@@ -11,9 +11,6 @@ import { cache } from "react";
 import { dash, sentinel } from "@better-auth/infra";
 import { createHash } from "@better-auth/utils/hash";
 import { admin, oAuthProxy } from "better-auth/plugins";
-import { stripe } from "@better-auth/stripe";
-import { getStripeClient, isStripeEnabled } from "./billing/stripe";
-import { grantSignupCredits } from "./billing/credit";
 import { patSignIn } from "./auth-plugins/pat-signin";
 
 async function getOctokitUser(token: string) {
@@ -45,36 +42,6 @@ export const auth = betterAuth({
 		sentinel(),
 		admin(),
 		patSignIn(),
-		...(isStripeEnabled
-			? [
-					stripe({
-						stripeClient: getStripeClient(),
-						stripeWebhookSecret:
-							process.env.STRIPE_WEBHOOK_SECRET!,
-						createCustomerOnSignUp: true,
-						onCustomerCreate: async ({ user }) => {
-							await grantSignupCredits(user.id);
-						},
-						subscription: {
-							enabled: true,
-							plans: [
-								{
-									name: "base",
-									priceId: process.env
-										.STRIPE_BASE_PRICE_ID!,
-									lineItems: [
-										{
-											price: process
-												.env
-												.STRIPE_METERED_PRICE_ID!,
-										},
-									],
-								},
-							],
-						},
-					}),
-				]
-			: []),
 		...(process.env.VERCEL
 			? [oAuthProxy({ productionURL: "https://www.better-hub.com" })]
 			: []),
