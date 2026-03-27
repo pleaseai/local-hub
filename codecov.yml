@@ -1,0 +1,45 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: 80%
+
+flags:
+  unit:
+    paths:
+      - crates/server/src/
+    carryforward: true
+  integration:
+    paths:
+      - crates/server/src/
+    carryforward: true
+
+component_management:
+  default_rules:
+    statuses:
+      - type: project
+        target: auto
+  individual_components:
+    - component_id: cache
+      name: Cache
+      paths:
+        - crates/server/src/cache.rs
+        - crates/server/src/key.rs
+        - crates/server/src/ttl.rs
+    - component_id: proxy
+      name: Proxy
+      paths:
+        - crates/server/src/proxy.rs
+    - component_id: server
+      name: Server
+      paths:
+        - crates/server/src/server.rs
+        - crates/server/src/main.rs
+    - component_id: error
+      name: Error
+      paths:
+        - crates/server/src/error.rs
