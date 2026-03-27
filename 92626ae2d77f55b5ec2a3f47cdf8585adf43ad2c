@@ -1,0 +1,27 @@
+eslint.config.mjs
+  2dda355bc365bd5a 5
+package.json
+  2dda355bc365bd5a 5-7
+apps/web/tsconfig.json
+  2dda355bc365bd5a 7,21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "92626ae2d77f55b5ec2a3f47cdf8585adf43ad2c",
+  "prompts": {
+    "2dda355bc365bd5a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "27f0e826-e433-41b1-a772-b7657a087989",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Minsu Lee <amond@amond.net>",
+      "messages": [],
+      "total_additions": 15,
+      "total_deletions": 2,
+      "accepted_lines": 6,
+      "overriden_lines": 11
+    }
+  }
+}
