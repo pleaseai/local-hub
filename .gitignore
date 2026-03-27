@@ -9,3 +9,5 @@ node_modules/
 
 # please plugin runtime state
 .please/state/
+apps/web/node_modules/
+apps/web/.next/

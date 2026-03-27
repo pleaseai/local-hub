@@ -1,0 +1,440 @@
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             String   @id
+  name           String
+  email          String
+  githubPat      String?
+  onboardingDone Boolean  @default(false)
+  emailVerified  Boolean
+  image          String?
+  createdAt      DateTime
+  updatedAt      DateTime
+
+  sessions   Session[]
+  accounts   Account[]
+  usageLogs    UsageLog[]
+  aiCallLogs   AiCallLog[]
+  creditLedger CreditLedger[]
+
+  aiMessageCount Int       @default(0)
+  lastActiveAt   DateTime?
+  role           String?
+  banned         Boolean?  @default(false)
+  banReason      String?
+  banExpires     DateTime?
+
+  stripeCustomerId String?
+
+  @@map("user")
+  @@index([githubPat, email])
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  impersonatedBy String?
+
+  @@map("session")
+  @@index([userId, expiresAt])
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
+  @@index([userId, providerId])
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+  @@index([identifier, expiresAt])
+}
+
+model Subscription {
+  id                   String    @id
+  plan                 String
+  referenceId          String
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  status               String?   @default("incomplete")
+  periodStart          DateTime?
+  periodEnd            DateTime?
+  trialStart           DateTime?
+  trialEnd             DateTime?
+  cancelAtPeriodEnd    Boolean?  @default(false)
+  cancelAt             DateTime?
+  canceledAt           DateTime?
+  endedAt              DateTime?
+  seats                Int?
+  billingInterval      String?
+  stripeScheduleId     String?
+
+  @@map("subscription")
+}
+
+model GithubCacheEntry {
+  userId    String
+  cacheKey  String
+  cacheType String
+  dataJson  String
+  syncedAt  String
+  etag      String?
+
+  @@id([userId, cacheKey])
+  @@index([userId, cacheType])
+  @@map("github_cache_entries")
+}
+
+model GithubSyncJob {
+  id            Int     @id @default(autoincrement())
+  userId        String
+  dedupeKey     String
+  jobType       String
+  payloadJson   String
+  status        String  @default("pending")
+  attempts      Int     @default(0)
+  nextAttemptAt String
+  startedAt     String?
+  lastError     String?
+  createdAt     String
+  updatedAt     String
+
+  @@unique([userId, dedupeKey], map: "idx_github_sync_jobs_dedupe_active")
+  @@index([userId, status, nextAttemptAt, id])
+  @@map("github_sync_jobs")
+}
+
+model ChatConversation {
+  id             String  @id
+  userId         String
+  chatType       String
+  contextKey     String
+  title          String?
+  activeStreamId String?
+  createdAt      String
+  updatedAt      String
+
+  messages ChatMessage[]
+
+  @@unique([userId, contextKey])
+  @@index([userId, chatType])
+  @@map("chat_conversations")
+}
+
+model ChatMessage {
+  id             String  @id
+  conversationId String
+  role           String
+  content        String
+  partsJson      String?
+  createdAt      String
+
+  conversation ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("chat_messages")
+}
+
+model GhostTab {
+  userId   String
+  tabId    String
+  label    String
+  position Int
+
+  @@id([userId, tabId])
+  @@map("ghost_tabs")
+}
+
+model GhostTabState {
+  userId      String @id
+  activeTabId String
+  counter     Int    @default(1)
+
+  @@map("ghost_tab_state")
+}
+
+model UserSettings {
+  userId           String  @id
+  displayName      String?
+  theme            String  @default("system")
+  colorTheme       String  @default("better-auth")
+  colorMode        String  @default("dark")
+  ghostModel       String  @default("auto")
+  useOwnApiKey     Boolean @default(false)
+  openrouterApiKey String?
+  githubPat        String?
+  codeThemeLight   String  @default("vitesse-light")
+  codeThemeDark    String  @default("vitesse-black")
+  codeFont         String  @default("default")
+  codeFontSize     Int     @default(13)
+  onboardingDone   Boolean @default(false)
+  updatedAt        String
+
+  @@map("user_settings")
+}
+
+model CustomCodeTheme {
+  id          String @id
+  userId      String
+  name        String
+  mode        String @default("dark")
+  themeJson   String
+  bgColor     String
+  fgColor     String
+  accentColor String
+  createdAt   String
+
+  @@map("custom_code_themes")
+}
+
+model SearchEmbedding {
+  id            String  @id
+  userId        String
+  contentType   String
+  contentKey    String
+  owner         String
+  repo          String
+  itemNumber    Int
+  contentHash   String
+  embeddingJson String
+  title         String?
+  snippet       String
+  metadataJson  String?
+  createdAt     String
+  updatedAt     String
+
+  @@index([userId, owner, repo])
+  @@index([userId, contentType, contentKey])
+  @@map("search_embeddings")
+}
+
+model PinnedItem {
+  id       String @id
+  userId   String
+  owner    String
+  repo     String
+  url      String
+  title    String
+  itemType String
+  pinnedAt String
+
+  @@unique([userId, owner, repo, url])
+  @@index([userId, owner, repo])
+  @@map("pinned_items")
+}
+
+model UsageLog {
+  id              String   @id @default(cuid())
+  userId          String
+  taskType        String
+  costUsd         Decimal  @default(0) @db.Decimal(10, 6)
+  creditUsed      Decimal  @default(0) @db.Decimal(10, 6)
+  aiCallLogId     Int?     @unique
+  stripeReported  Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  aiCallLog AiCallLog? @relation(fields: [aiCallLogId], references: [id])
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([stripeReported, createdAt])
+  @@map("usage_logs")
+}
+
+model AiCallLog {
+  id             Int      @id @default(autoincrement())
+  userId         String
+  provider       String
+  modelId        String
+  taskType       String
+  inputTokens    Int      @default(0)
+  outputTokens   Int      @default(0)
+  totalTokens    Int      @default(0)
+  usageJson      String?
+  costJson       String?
+  usingOwnKey    Boolean  @default(false)
+  conversationId String?
+  createdAt      DateTime @default(now())
+
+  usageLog UsageLog?
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("ai_call_logs")
+}
+
+model CreditLedger {
+  id          String    @id @default(cuid())
+  userId      String
+  amount      Decimal   @db.Decimal(10, 6)
+  type        String
+  description String?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@map("credit_ledger")
+}
+
+model SpendingLimit {
+  userId        String   @id
+  monthlyCapUsd Decimal  @db.Decimal(10, 2) @default(10.00)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("spending_limit")
+}
+
+
+model PromptRequest {
+  id             String  @id
+  userId         String
+  userLogin      String?
+  userName       String?
+  userAvatarUrl  String?
+  owner          String
+  repo           String
+  title          String
+  body           String
+  status         String  @default("open")
+  acceptedById   String?
+  acceptedByName String?
+  createdAt      String
+  updatedAt      String
+
+  @@index([owner, repo, status])
+  @@index([userId])
+  @@map("prompt_requests")
+}
+
+model PromptRequestComment {
+  id              String @id
+  promptRequestId String
+  userId          String
+  userLogin       String?
+  userName        String
+  userAvatarUrl   String
+  body            String
+  createdAt       String
+  updatedAt       String
+
+  @@index([promptRequestId, createdAt])
+  @@index([userId])
+  @@map("prompt_request_comments")
+}
+
+model PromptRequestReaction {
+  id              String @id
+  promptRequestId String
+  userId          String
+  userLogin       String?
+  userName        String
+  userAvatarUrl   String
+  content         String
+  createdAt       String
+
+  @@unique([promptRequestId, userId, content])
+  @@index([promptRequestId])
+  @@index([userId])
+  @@map("prompt_request_reactions")
+}
+
+model PrOverviewAnalysis {
+  id           String @id
+  owner        String
+  repo         String
+  pullNumber   Int
+  headSha      String
+  analysisJson String
+  createdAt    String
+  updatedAt    String
+
+  @@unique([owner, repo, pullNumber])
+  @@index([owner, repo, pullNumber, headSha])
+  @@map("pr_overview_analyses")
+}
+
+model CustomTheme {
+  id              String  @id @default(cuid())
+  slug            String  @unique
+  owner           String
+  repo            String
+  name            String
+  description     String
+  type            String
+  version         String  @default("1.0.0")
+  manifestJson    String
+  dataJson        String?
+  readmeHtml      String?
+  iconUrl         String?
+  license         String?
+  authorGithubId  String
+  authorName      String
+  authorAvatarUrl String?
+  downloads       Int     @default(0)
+  verified        Boolean @default(false)
+  featured        Boolean @default(false)
+  publishedAt     String
+  updatedAt       String
+  dataCachedAt    String?
+
+  installs UserThemeInstall[]
+
+  @@unique([owner, repo])
+  @@index([type])
+  @@index([downloads])
+  @@map("theme_store_extensions")
+}
+
+model UserThemeInstall {
+  userId        String
+  customThemeId String  @map("extensionId")
+  installedAt   String
+
+  customTheme CustomTheme @relation(fields: [customThemeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, customThemeId])
+  @@index([userId])
+  @@map("user_theme_store_installs")
+}

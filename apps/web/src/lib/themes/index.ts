@@ -1,0 +1,134 @@
+import type { ThemeColors, ThemeDefinition, ThemeVariant, ShikiTheme } from "./types";
+import {
+	arctic,
+	cloudflare,
+	ember,
+	forest,
+	betterAuthTheme,
+	mintlify,
+	noir,
+	nordWave,
+	rabbit,
+	stripe,
+	supabase,
+	tailwind,
+	vercel,
+	vesper,
+	zinc,
+	catppuccin,
+	github,
+	rosePine,
+	LEGACY_THEME_MAP,
+} from "./themes";
+
+const themes: ThemeDefinition[] = [
+	betterAuthTheme,
+	vercel,
+	cloudflare,
+	supabase,
+	tailwind,
+	mintlify,
+	stripe,
+	vesper,
+	ember,
+	zinc,
+	arctic,
+	nordWave,
+	rabbit,
+	noir,
+	forest,
+	catppuccin,
+	github,
+	rosePine,
+];
+
+export type { ThemeColors, ThemeDefinition, ThemeVariant, ShikiTheme };
+
+export const STORAGE_KEY = "color-theme";
+export const MODE_KEY = "color-mode";
+export const DEFAULT_THEME_ID = "better-auth";
+export const DEFAULT_MODE: "dark" | "light" = "dark";
+
+const themeMap = new Map(themes.map((t) => [t.id, t]));
+
+const storeThemes: ThemeDefinition[] = [];
+
+export function listThemes(): ThemeDefinition[] {
+	return themes;
+}
+
+export function listStoreThemes(): ThemeDefinition[] {
+	return storeThemes;
+}
+
+export function listAllThemes(): ThemeDefinition[] {
+	return [...themes, ...storeThemes];
+}
+
+export function getTheme(id: string): ThemeDefinition | undefined {
+	return themeMap.get(id);
+}
+
+export function registerStoreTheme(theme: ThemeDefinition): void {
+	if (themeMap.has(theme.id)) return;
+	themeMap.set(theme.id, theme);
+	storeThemes.push(theme);
+}
+
+export function clearStoreThemes(): void {
+	for (const t of storeThemes) {
+		themeMap.delete(t.id);
+	}
+	storeThemes.length = 0;
+}
+
+export function getThemeVariant(id: string, mode: "dark" | "light"): ThemeVariant | undefined {
+	const theme = themeMap.get(id);
+	return theme?.[mode];
+}
+
+export function migrateLegacyThemeId(
+	legacyId: string,
+): { themeId: string; mode: "dark" | "light" } | undefined {
+	return LEGACY_THEME_MAP[legacyId];
+}
+
+const RAW_HSL_RE = /^\d+(\.\d+)?\s+\d+(\.\d+)?%\s+\d+(\.\d+)?%/;
+
+function normalizeCssColor(value: string): string {
+	if (RAW_HSL_RE.test(value)) return `hsl(${value})`;
+	return value;
+}
+
+export function applyTheme(themeId: string, mode: "dark" | "light"): void {
+	const el = document.documentElement;
+	const theme = getTheme(themeId);
+	const variant = theme?.[mode];
+
+	const hubDark = betterAuthTheme.dark;
+	const allKeys = Object.keys(hubDark.colors) as (keyof ThemeColors)[];
+
+	if (!variant || (themeId === DEFAULT_THEME_ID && mode === DEFAULT_MODE)) {
+		for (const key of allKeys) {
+			el.style.removeProperty(key);
+		}
+		el.classList.add("dark");
+		el.classList.remove("light");
+		el.style.colorScheme = "dark";
+		return;
+	}
+
+	for (const key of allKeys) {
+		el.style.setProperty(key, normalizeCssColor(variant.colors[key]));
+	}
+
+	if (mode === "dark") {
+		el.classList.add("dark");
+		el.classList.remove("light");
+		el.style.colorScheme = "dark";
+	} else {
+		el.classList.remove("dark");
+		el.classList.add("light");
+		el.style.colorScheme = "light";
+	}
+}

@@ -1,0 +1,2127 @@
+"use client";
+
+import { useState, useMemo, useRef, useCallback, useTransition, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { GithubAvatar } from "@/components/shared/github-avatar";
+import {
+	GitPullRequest,
+	GitPullRequestClosed,
+	GitMerge,
+	MessageSquare,
+	Clock,
+	GitBranch,
+	FileCode2,
+	X,
+	Loader2,
+	Plus,
+	Eye,
+	ExternalLink,
+	Copy,
+	Hash,
+	XCircle,
+	RotateCcw,
+	User,
+	Maximize2,
+	GitCommitHorizontal,
+	ChevronRight,
+	FileText,
+	Check,
+} from "lucide-react";
+import type { CheckStatus, PRPageResult } from "@/lib/github";
+import type { PRPeekData } from "@/app/(app)/repos/[owner]/[repo]/pulls/actions";
+import { CheckStatusBadge } from "@/components/pr/check-status-badge";
+import { cn } from "@/lib/utils";
+import { TimeAgo } from "@/components/ui/time-ago";
+import { useClickOutside } from "@/hooks/use-click-outside";
+import {
+	ListSearchInput,
+	SortCycleButton,
+	FiltersButton,
+	ClearFiltersButton,
+	LoadingOverlay,
+} from "@/components/shared/list-controls";
+import { LabelBadge } from "@/components/shared/label-badge";
+import { useMutationSubscription } from "@/hooks/use-mutation-subscription";
+import { isRepoEvent, type MutationEvent } from "@/lib/mutation-events";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerInitialData } from "@/hooks/use-server-initial-data";
+import { UserTooltip } from "@/components/shared/user-tooltip";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { ResizeHandle } from "@/components/ui/resize-handle";
+
+interface PRUser {
+	login: string;
+	avatar_url: string;
+}
+
+interface PR {
+	id: number;
+	number: number;
+	title: string;
+	state: string;
+	draft: boolean;
+	updated_at: string;
+	created_at: string;
+	comments: number;
+	review_comments: number;
+	user: PRUser | null;
+	labels: Array<{ name?: string; color?: string }>;
+	merged_at: string | null;
+	head: { ref: string; sha: string };
+	head_repo_owner?: string | null;
+	head_repo_name?: string | null;
+	base: { ref: string };
+	requested_reviewers: PRUser[];
+	assignees: PRUser[];
+	additions: number;
+	deletions: number;
+	changed_files: number;
+	checkStatus?: CheckStatus;
+}
+
+function useBatchCheckStatuses(
+	owner: string,
+	repo: string,
+	openPRs: PR[],
+	onFetchAllCheckStatuses?: (
+		owner: string,
+		repo: string,
+		prNumbers: number[],
+	) => Promise<Record<number, CheckStatus>>,
+) {
+	const prNumbers = useMemo(() => openPRs.map((pr) => pr.number), [openPRs]);
+
+	const { data: statusMap = {}, isFetched: loaded } = useQuery({
+		queryKey: ["pr-check-statuses", owner, repo, prNumbers],
+		queryFn: () => onFetchAllCheckStatuses!(owner, repo, prNumbers),
+		enabled: !!onFetchAllCheckStatuses && openPRs.length > 0,
+		staleTime: 5 * 60 * 1000,
+		gcTime: 10 * 60 * 1000,
+	});
+
+	return { statusMap, loaded };
+}
+
+function PRCheckStatus({
+	pr,
+	owner,
+	repo,
+	resolvedStatus,
+	loaded,
+}: {
+	pr: PR;
+	owner: string;
+	repo: string;
+	resolvedStatus: CheckStatus | undefined;
+	loaded: boolean;
+}) {
+	if (pr.checkStatus) {
+		return <CheckStatusBadge checkStatus={pr.checkStatus} owner={owner} repo={repo} />;
+	}
+
+	if (!loaded && pr.state === "open") {
+		return (
+			<span className="flex items-center gap-1 animate-pulse">
+				<span className="w-3 h-3 rounded-full bg-muted-foreground/15" />
+				<span className="w-6 h-2.5 rounded-sm bg-muted-foreground/10" />
+			</span>
+		);
+	}
+
+	if (resolvedStatus) {
+		return <CheckStatusBadge checkStatus={resolvedStatus} owner={owner} repo={repo} />;
+	}
+
+	return null;
+}
+
+// Sheet constants
+const DEFAULT_SHEET_WIDTH = 700;
+const MIN_SHEET_WIDTH = 500;
+const MAX_SHEET_WIDTH_RATIO = 0.9;
+const SHEET_WIDTH_COOKIE = "pr_peek_sidebar_width";
+
+function PRContextMenu({
+	x,
+	y,
+	pr,
+	owner,
+	repo,
+	onClose,
+	onPeek,
+	onFilterByAuthor,
+	onClosePR,
+	onReopenPR,
+}: {
+	x: number;
+	y: number;
+	pr: PR;
+	owner: string;
+	repo: string;
+	onClose: () => void;
+	onPeek: () => void;
+	onFilterByAuthor: (login: string) => void;
+	onClosePR?: (
+		owner: string,
+		repo: string,
+		pullNumber: number,
+	) => Promise<{ error?: string; success?: boolean }>;
+	onReopenPR?: (
+		owner: string,
+		repo: string,
+		pullNumber: number,
+	) => Promise<{ error?: string; success?: boolean }>;
+}) {
+	const menuRef = useRef<HTMLDivElement>(null);
+	const [copiedField, setCopiedField] = useState<string | null>(null);
+	const [actionPending, setActionPending] = useState(false);
+
+	useEffect(() => {
+		const handler = (e: MouseEvent) => {
+			if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+				onClose();
+			}
+		};
+		const escHandler = (e: KeyboardEvent) => {
+			if (e.key === "Escape") onClose();
+		};
+		document.addEventListener("mousedown", handler);
+		document.addEventListener("keydown", escHandler);
+		return () => {
+			document.removeEventListener("mousedown", handler);
+			document.removeEventListener("keydown", escHandler);
+		};
+	}, [onClose]);
+
+	const prUrl = `/${owner}/${repo}/pulls/${pr.number}`;
+	const fullUrl = typeof window !== "undefined" ? `${window.location.origin}${prUrl}` : prUrl;
+	const githubUrl = `https://github.com/${owner}/${repo}/pull/${pr.number}`;
+	const isMerged = !!pr.merged_at;
+	const isOpen = pr.state === "open";
+	const isClosed = pr.state === "closed" && !isMerged;
+
+	const copyToClipboard = (text: string, field: string) => {
+		navigator.clipboard.writeText(text);
+		setCopiedField(field);
+		setTimeout(() => setCopiedField(null), 1500);
+	};
+
+	const handleClosePR = async () => {
+		if (!onClosePR || actionPending) return;
+		setActionPending(true);
+		await onClosePR(owner, repo, pr.number);
+		setActionPending(false);
+		onClose();
+	};
+
+	const handleReopenPR = async () => {
+		if (!onReopenPR || actionPending) return;
+		setActionPending(true);
+		await onReopenPR(owner, repo, pr.number);
+		setActionPending(false);
+		onClose();
+	};
+
+	const style: React.CSSProperties = {
+		top: Math.min(y, window.innerHeight - 400),
+		left: Math.min(x, window.innerWidth - 220),
+	};
+
+	const itemClass =
+		"flex items-center gap-2.5 w-full px-3 py-1.5 text-[11px] font-mono text-muted-foreground hover:bg-muted/60 dark:hover:bg-white/[0.04] hover:text-foreground transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed";
+
+	return createPortal(
+		<div
+			ref={menuRef}
+			className="fixed z-9999 w-52 rounded-md border border-border bg-card shadow-xl overflow-hidden animate-in fade-in-0 zoom-in-95 duration-100"
+			style={style}
+		>
+			{/* Navigation group */}
+			<div className="py-1">
+				<button
+					className={itemClass}
+					onClick={() => {
+						onPeek();
+						onClose();
+					}}
+				>
+					<Eye className="w-3.5 h-3.5" />
+					Peek PR
+				</button>
+				<Link href={prUrl} className={itemClass} onClick={onClose}>
+					<GitPullRequest className="w-3.5 h-3.5" />
+					Open
+				</Link>
+				<button
+					className={itemClass}
+					onClick={() => {
+						window.open(prUrl, "_blank");
+						onClose();
+					}}
+				>
+					<ExternalLink className="w-3.5 h-3.5" />
+					Open in New Tab
+				</button>
+				<button
+					className={itemClass}
+					onClick={() => {
+						window.open(githubUrl, "_blank");
+						onClose();
+					}}
+				>
+					<ExternalLink className="w-3.5 h-3.5" />
+					Open on GitHub
+				</button>
+			</div>
+
+			<div className="border-t border-border/50" />
+
+			{/* Copy group */}
+			<div className="py-1">
+				<button
+					className={itemClass}
+					onClick={() => copyToClipboard(fullUrl, "link")}
+				>
+					{copiedField === "link" ? (
+						<Check className="w-3.5 h-3.5 text-success" />
+					) : (
+						<Copy className="w-3.5 h-3.5" />
+					)}
+					{copiedField === "link" ? "Copied!" : "Copy Link"}
+				</button>
+				<button
+					className={itemClass}
+					onClick={() => copyToClipboard(`#${pr.number}`, "number")}
+				>
+					{copiedField === "number" ? (
+						<Check className="w-3.5 h-3.5 text-success" />
+					) : (
+						<Hash className="w-3.5 h-3.5" />
+					)}
+					{copiedField === "number"
+						? "Copied!"
+						: `Copy #${pr.number}`}
+				</button>
+				<button
+					className={itemClass}
+					onClick={() =>
+						copyToClipboard(
+							pr.head_repo_owner &&
+								pr.head_repo_owner !== owner
+								? `${pr.head_repo_owner}:${pr.head.ref}`
+								: pr.head.ref,
+							"branch",
+						)
+					}
+				>
+					{copiedField === "branch" ? (
+						<Check className="w-3.5 h-3.5 text-success" />
+					) : (
+						<GitBranch className="w-3.5 h-3.5" />
+					)}
+					{copiedField === "branch" ? "Copied!" : "Copy Branch"}
+				</button>
+			</div>
+
+			{/* Filter group */}
+			{pr.user && (
+				<>
+					<div className="border-t border-border/50" />
+					<div className="py-1">
+						<button
+							className={itemClass}
+							onClick={() => {
+								onFilterByAuthor(pr.user!.login);
+								onClose();
+							}}
+						>
+							<User className="w-3.5 h-3.5" />
+							Filter by {pr.user.login}
+						</button>
+					</div>
+				</>
+			)}
+
+			{/* Action group */}
+			{(isOpen || isClosed) && (onClosePR || onReopenPR) && (
+				<>
+					<div className="border-t border-border/50" />
+					<div className="py-1">
+						{isOpen && onClosePR && (
+							<button
+								className={cn(
+									itemClass,
+									"text-destructive hover:text-destructive",
+								)}
+								onClick={handleClosePR}
+								disabled={actionPending}
+							>
+								{actionPending ? (
+									<Loader2 className="w-3.5 h-3.5 animate-spin" />
+								) : (
+									<XCircle className="w-3.5 h-3.5" />
+								)}
+								Close PR
+							</button>
+						)}
+						{isClosed && onReopenPR && (
+							<button
+								className={cn(
+									itemClass,
+									"text-success hover:text-success",
+								)}
+								onClick={handleReopenPR}
+								disabled={actionPending}
+							>
+								{actionPending ? (
+									<Loader2 className="w-3.5 h-3.5 animate-spin" />
+								) : (
+									<RotateCcw className="w-3.5 h-3.5" />
+								)}
+								Reopen PR
+							</button>
+						)}
+					</div>
+				</>
+			)}
+		</div>,
+		document.body,
+	);
+}
+
+function PRPeekSheet({
+	open,
+	onOpenChange,
+	owner,
+	repo,
+	pr,
+	peekData,
+	isLoading,
+	sheetWidth,
+	isResizing,
+	onResize,
+	onResizeEnd,
+	onResetWidth,
+}: {
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+	owner: string;
+	repo: string;
+	pr: PR | null;
+	peekData: PRPeekData | null;
+	isLoading: boolean;
+	sheetWidth: number | null;
+	isResizing: boolean;
+	onResize: (clientX: number) => void;
+	onResizeEnd: () => void;
+	onResetWidth: () => void;
+}) {
+	const data = peekData;
+	const isMerged = data ? !!data.merged_at : false;
+
+	return (
+		<Sheet open={open} onOpenChange={onOpenChange}>
+			<SheetContent
+				title="PR Preview"
+				side="right"
+				className="p-0 overflow-hidden"
+				showCloseButton={false}
+				style={{
+					width: sheetWidth ?? DEFAULT_SHEET_WIDTH,
+					maxWidth: "90vw",
+					minWidth: `${MIN_SHEET_WIDTH}px`,
+					transition: isResizing ? "none" : "width 0.2s ease-out",
+				}}
+			>
+				<ResizeHandle
+					onResize={onResize}
+					onDragStart={() => {}}
+					onDragEnd={onResizeEnd}
+					onDoubleClick={onResetWidth}
+					className="absolute left-0 inset-y-0 z-20"
+				/>
+				<div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+					{pr && (
+						<Link
+							href={`/${owner}/${repo}/pulls/${pr.number}`}
+							title="Open full page"
+							className="rounded-sm p-1 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+						>
+							<Maximize2 className="h-4 w-4" />
+							<span className="sr-only">
+								Open full page
+							</span>
+						</Link>
+					)}
+					<button
+						onClick={() => onOpenChange(false)}
+						className="rounded-sm p-1 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
+					>
+						<X className="h-4 w-4" />
+						<span className="sr-only">Close</span>
+					</button>
+				</div>
+
+				{isLoading ? (
+					<div className="flex items-center justify-center h-full">
+						<Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+					</div>
+				) : data ? (
+					<div className="h-full overflow-y-auto">
+						{/* Header */}
+						<div className="px-6 pt-6 pb-4 border-b border-border">
+							<div className="flex items-start gap-2 pr-16">
+								{isMerged ? (
+									<GitMerge className="w-4 h-4 shrink-0 mt-1 text-alert-important" />
+								) : data.state === "closed" ? (
+									<GitPullRequestClosed className="w-4 h-4 shrink-0 mt-1 text-destructive" />
+								) : (
+									<GitPullRequest
+										className={cn(
+											"w-4 h-4 shrink-0 mt-1",
+											data.draft
+												? "text-muted-foreground/70"
+												: "text-success",
+										)}
+									/>
+								)}
+								<div className="flex-1 min-w-0">
+									<h2 className="text-sm font-medium leading-snug wrap-break-word">
+										{data.title}
+									</h2>
+									<div className="flex items-center gap-2 mt-1.5 flex-wrap">
+										<span
+											className={cn(
+												"text-[9px] font-mono px-1.5 py-0.5 rounded-full",
+												isMerged
+													? "bg-alert-important/10 text-alert-important"
+													: data.state ===
+														  "closed"
+														? "bg-destructive/10 text-destructive"
+														: data.draft
+															? "bg-muted-foreground/10 text-muted-foreground/70"
+															: "bg-success/10 text-success",
+											)}
+										>
+											{isMerged
+												? "Merged"
+												: data.draft
+													? "Draft"
+													: data.state ===
+														  "closed"
+														? "Closed"
+														: "Open"}
+										</span>
+										<span className="text-[11px] font-mono text-muted-foreground/60">
+											#
+											{
+												data.number
+											}
+										</span>
+										{data.user && (
+											<span className="flex items-center gap-1 text-[11px] text-muted-foreground/60">
+												<GithubAvatar
+													src={
+														data
+															.user
+															.avatar_url
+													}
+													alt={
+														data
+															.user
+															.login
+													}
+													size={
+														14
+													}
+													className="rounded-full"
+												/>
+												{
+													data
+														.user
+														.login
+												}
+											</span>
+										)}
+										<span className="flex items-center gap-1 text-[11px] text-muted-foreground/50">
+											<Clock className="w-3 h-3" />
+											<TimeAgo
+												date={
+													data.created_at
+												}
+											/>
+										</span>
+									</div>
+								</div>
+							</div>
+
+							{/* Branch info */}
+							<div className="flex items-center gap-1.5 mt-3 font-mono text-[10px] text-muted-foreground">
+								<GitBranch className="w-3 h-3" />
+								<span className="px-1.5 py-0.5 bg-muted/50 rounded">
+									{data.head_repo_owner &&
+									data.head_repo_owner !==
+										owner ? (
+										<>
+											<span className="text-muted-foreground/40">
+												{
+													data.head_repo_owner
+												}
+												:
+											</span>
+											{
+												data
+													.head
+													.ref
+											}
+										</>
+									) : (
+										data.head.ref
+									)}
+								</span>
+								<span>&rarr;</span>
+								<span className="px-1.5 py-0.5 bg-muted/50 rounded">
+									{data.base.ref}
+								</span>
+							</div>
+
+							{/* Stats row */}
+							<div className="flex items-center gap-3 mt-3">
+								<span className="font-mono text-success text-[10px]">
+									+{data.additions}
+								</span>
+								<span className="font-mono text-destructive text-[10px]">
+									-{data.deletions}
+								</span>
+								<span className="flex items-center gap-1 font-mono text-muted-foreground text-[10px]">
+									<FileCode2 className="w-3 h-3" />
+									{data.changed_files} file
+									{data.changed_files !== 1
+										? "s"
+										: ""}
+								</span>
+								<span className="flex items-center gap-1 font-mono text-muted-foreground text-[10px]">
+									<GitCommitHorizontal className="w-3 h-3" />
+									{data.commitsCount} commit
+									{data.commitsCount !== 1
+										? "s"
+										: ""}
+								</span>
+								{data.commentsCount > 0 && (
+									<span className="flex items-center gap-1 font-mono text-muted-foreground text-[10px]">
+										<MessageSquare className="w-3 h-3" />
+										{data.commentsCount}
+									</span>
+								)}
+							</div>
+
+							{/* Labels */}
+							{data.labels.filter((l) => l.name).length >
+								0 && (
+								<div className="flex items-center gap-1.5 mt-3 flex-wrap">
+									{data.labels
+										.filter(
+											(l) =>
+												l.name,
+										)
+										.map((label) => (
+											<LabelBadge
+												key={
+													label.name
+												}
+												label={
+													label
+												}
+											/>
+										))}
+								</div>
+							)}
+						</div>
+
+						{/* Body */}
+						{data.bodyHtml && (
+							<div className="px-6 py-4 border-b border-border">
+								<div
+									className="ghmd ghmd-sm text-sm"
+									dangerouslySetInnerHTML={{
+										__html: data.bodyHtml,
+									}}
+								/>
+							</div>
+						)}
+
+						{/* Files */}
+						{data.files.length > 0 && (
+							<div className="px-6 py-4">
+								<div className="flex items-center gap-2 mb-3">
+									<FileText className="w-3.5 h-3.5 text-muted-foreground/50" />
+									<span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground/50">
+										Files Changed (
+										{data.files.length})
+									</span>
+								</div>
+								<div className="space-y-0.5">
+									{data.files.map((file) => (
+										<div
+											key={
+												file.filename
+											}
+											className="flex items-center gap-2 py-1 px-2 rounded hover:bg-muted/30 transition-colors group/file"
+										>
+											<ChevronRight className="w-3 h-3 text-muted-foreground/30 group-hover/file:text-muted-foreground/50 transition-colors" />
+											<span className="flex-1 min-w-0 text-[11px] font-mono text-muted-foreground truncate">
+												{
+													file.filename
+												}
+											</span>
+											<span className="flex items-center gap-1.5 shrink-0">
+												{file.additions >
+													0 && (
+													<span className="font-mono text-success text-[10px]">
+														+
+														{
+															file.additions
+														}
+													</span>
+												)}
+												{file.deletions >
+													0 && (
+													<span className="font-mono text-destructive text-[10px]">
+														-
+														{
+															file.deletions
+														}
+													</span>
+												)}
+												{file.status !==
+													"modified" && (
+													<span
+														className={cn(
+															"text-[9px] font-mono px-1 py-0.5 rounded",
+															file.status ===
+																"added"
+																? "bg-success/10 text-success"
+																: file.status ===
+																	  "removed"
+																	? "bg-destructive/10 text-destructive"
+																	: "bg-muted text-muted-foreground",
+														)}
+													>
+														{
+															file.status
+														}
+													</span>
+												)}
+											</span>
+										</div>
+									))}
+								</div>
+							</div>
+						)}
+					</div>
+				) : (
+					<div className="flex items-center justify-center h-full">
+						<p className="text-sm text-muted-foreground">
+							Pull request not found
+						</p>
+					</div>
+				)}
+			</SheetContent>
+		</Sheet>
+	);
+}
+
+type SortType = "updated" | "newest" | "oldest" | "comments";
+type DraftFilter = "all" | "ready" | "draft";
+type ReviewFilter = "all" | "has_reviewers" | "no_reviewers";
+type AssigneeFilter = "all" | "assigned" | "unassigned";
+
+const sortLabels: Record<SortType, string> = {
+	updated: "Updated",
+	newest: "Newest",
+	oldest: "Oldest",
+	comments: "Comments",
+};
+
+const sortCycle: SortType[] = ["newest", "updated", "oldest", "comments"];
+
+type FetchPRPageFn = (
+	owner: string,
+	repo: string,
+	state: "open" | "closed" | "all",
+	cursor: string | null,
+) => Promise<{ prs: PRPageResult["prs"]; pageInfo: PRPageResult["pageInfo"] }>;
+
+export function PRsList({
+	owner,
+	repo,
+	initialOpenPRs,
+	initialPageInfo,
+	mergedPreview: initialMergedPreview,
+	closedPreview: initialClosedPreview,
+	openCount,
+	closedCount,
+	mergedCount,
+	onAuthorFilter,
+	onFetchAllCheckStatuses,
+	onPrefetchPRDetail,
+	onFetchPRPage,
+	currentUserLogin,
+	onFetchPRPeekDetail,
+	onClosePR,
+	onReopenPR,
+}: {
+	owner: string;
+	repo: string;
+	initialOpenPRs: PR[];
+	initialPageInfo: PRPageResult["pageInfo"];
+	mergedPreview?: PR[];
+	closedPreview?: PR[];
+	openCount: number;
+	closedCount: number;
+	mergedCount: number;
+	onAuthorFilter?: (
+		owner: string,
+		repo: string,
+		author: string,
+	) => Promise<{ open: PR[]; closed: PR[] }>;
+	onFetchAllCheckStatuses?: (
+		owner: string,
+		repo: string,
+		prNumbers: number[],
+	) => Promise<Record<number, CheckStatus>>;
+	onPrefetchPRDetail?: (
+		owner: string,
+		repo: string,
+		pullNumber: number,
+		authorLogin?: string | null,
+	) => Promise<void>;
+	onFetchPRPage?: FetchPRPageFn;
+	currentUserLogin?: string | null;
+	onFetchPRPeekDetail?: (
+		owner: string,
+		repo: string,
+		pullNumber: number,
+	) => Promise<PRPeekData | null>;
+	onClosePR?: (
+		owner: string,
+		repo: string,
+		pullNumber: number,
+	) => Promise<{ error?: string; success?: boolean }>;
+	onReopenPR?: (
+		owner: string,
+		repo: string,
+		pullNumber: number,
+	) => Promise<{ error?: string; success?: boolean }>;
+}) {
+	type TabState = "open" | "merged" | "closed";
+	const searchParams = useSearchParams();
+	const tabParam = searchParams.get("tab");
+	const initialTab: TabState =
+		tabParam === "merged" || tabParam === "closed" ? tabParam : "open";
+	const [state, setState] = useState<TabState>(initialTab);
+	const [search, setSearch] = useState("");
+	const [sort, setSort] = useState<SortType>("newest");
+	const [selectedAuthor, setSelectedAuthor] = useState<string | null>(null);
+	const [authorSearch, setAuthorSearch] = useState("");
+	const [authorDropdownOpen, setAuthorDropdownOpen] = useState(false);
+	const authorRef = useRef<HTMLDivElement>(null);
+	const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
+	const [authorPRs, setAuthorPRs] = useState<{
+		open: PR[];
+		closed: PR[];
+	} | null>(null);
+	const [isPending, startTransition] = useTransition();
+	const [showFilters, setShowFilters] = useState(false);
+	const [draftFilter, setDraftFilter] = useState<DraftFilter>("all");
+	const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("all");
+	const [assigneeFilter, setAssigneeFilter] = useState<AssigneeFilter>("all");
+	const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
+	const [countAdjustments, setCountAdjustments] = useState({ open: 0, merged: 0, closed: 0 });
+
+	// Context menu state
+	const [contextMenu, setContextMenu] = useState<{ x: number; y: number; pr: PR } | null>(
+		null,
+	);
+
+	// Peek sheet state
+	const [peekOpen, setPeekOpen] = useState(false);
+	const [peekPR, setPeekPR] = useState<PR | null>(null);
+	const [peekData, setPeekData] = useState<PRPeekData | null>(null);
+	const [isPeekLoading, setIsPeekLoading] = useState(false);
+	const [peekSheetWidth, setPeekSheetWidth] = useState<number | null>(null);
+	const [isPeekResizing, setIsPeekResizing] = useState(false);
+
+	// Load peek sheet width from cookie
+	useEffect(() => {
+		const match = document.cookie.match(
+			new RegExp(`(?:^|; )${SHEET_WIDTH_COOKIE}=([^;]*)`),
+		);
+		if (match) {
+			const saved = parseInt(match[1], 10);
+			if (!isNaN(saved) && saved >= MIN_SHEET_WIDTH) setPeekSheetWidth(saved);
+		}
+	}, []);
+
+	const savePeekSheetWidthCookie = useCallback((width: number | null) => {
+		if (width === null) {
+			document.cookie = `${SHEET_WIDTH_COOKIE}=;path=/;max-age=0`;
+		} else {
+			document.cookie = `${SHEET_WIDTH_COOKIE}=${width};path=/;max-age=${365 * 24 * 60 * 60};samesite=lax`;
+		}
+	}, []);
+
+	const handlePeekResize = useCallback((clientX: number) => {
+		const newWidth = window.innerWidth - clientX;
+		const maxWidth = window.innerWidth * MAX_SHEET_WIDTH_RATIO;
+		setPeekSheetWidth(Math.max(MIN_SHEET_WIDTH, Math.min(maxWidth, newWidth)));
+		setIsPeekResizing(true);
+	}, []);
+
+	const handlePeekResizeEnd = useCallback(() => {
+		setIsPeekResizing(false);
+		setPeekSheetWidth((w) => {
+			if (w !== null) savePeekSheetWidthCookie(w);
+			return w;
+		});
+	}, [savePeekSheetWidthCookie]);
+
+	const resetPeekSheetWidth = useCallback(() => {
+		setPeekSheetWidth(null);
+		savePeekSheetWidthCookie(null);
+	}, [savePeekSheetWidthCookie]);
+
+	const handlePeek = useCallback(
+		async (pr: PR) => {
+			setPeekPR(pr);
+			setPeekOpen(true);
+			setIsPeekLoading(true);
+			setPeekData(null);
+
+			if (onFetchPRPeekDetail) {
+				const result = await onFetchPRPeekDetail(owner, repo, pr.number);
+				setPeekData(result);
+			}
+			setIsPeekLoading(false);
+		},
+		[owner, repo, onFetchPRPeekDetail],
+	);
+
+	const handleContextMenu = useCallback((e: React.MouseEvent, pr: PR) => {
+		e.preventDefault();
+		setContextMenu({ x: e.clientX, y: e.clientY, pr });
+	}, []);
+
+	const handleContextFilterByAuthor = useCallback(
+		(login: string) => {
+			setSelectedAuthor(login);
+			setAuthorSearch("");
+			setAuthorDropdownOpen(false);
+			if (onAuthorFilter) {
+				startTransition(async () => {
+					const result = await onAuthorFilter(owner, repo, login);
+					setAuthorPRs(result as { open: PR[]; closed: PR[] });
+				});
+			}
+		},
+		[owner, repo, onAuthorFilter, startTransition],
+	);
+
+	type PRPage = { prs: PR[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } };
+
+	const queryClient = useQueryClient();
+
+	const openDataFingerprint = useMemo(() => {
+		if (initialOpenPRs.length === 0) return "empty";
+		const ids = initialOpenPRs
+			.slice(0, 5)
+			.map((pr) => pr.id)
+			.join("-");
+		return `${ids}:${initialOpenPRs.length}:${initialPageInfo.endCursor ?? ""}`;
+	}, [initialOpenPRs, initialPageInfo]);
+
+	const openQueryKey = useMemo(() => ["prs", owner, repo, "open"], [owner, repo]);
+	const closedQueryKey = useMemo(() => ["prs", owner, repo, "closed"], [owner, repo]);
+
+	useServerInitialData(
+		openQueryKey,
+		{
+			pages: [{ prs: initialOpenPRs, pageInfo: initialPageInfo }],
+			pageParams: [null],
+		},
+		openDataFingerprint,
+	);
+
+	// When open data changes (e.g. a PR was merged/closed), also clear the
+	// stale closed-query cache so it re-fetches when the user switches tabs.
+	useEffect(() => {
+		queryClient.removeQueries({ queryKey: closedQueryKey });
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [openDataFingerprint]);
+
+	const openQuery = useInfiniteQuery<
+		PRPage,
+		Error,
+		{ pages: PRPage[]; pageParams: (string | null)[] },
+		string[],
+		string | null
+	>({
+		queryKey: openQueryKey,
+		queryFn: async ({ pageParam }) => {
+			if (!onFetchPRPage)
+				return {
+					prs: [],
+					pageInfo: { hasNextPage: false, endCursor: null },
+				};
+			return onFetchPRPage(owner, repo, "open", pageParam) as Promise<PRPage>;
+		},
+		initialPageParam: null,
+		initialData: {
+			pages: [{ prs: initialOpenPRs, pageInfo: initialPageInfo }],
+			pageParams: [null],
+		},
+		getNextPageParam: (lastPage) =>
+			lastPage.pageInfo.hasNextPage ? lastPage.pageInfo.endCursor : undefined,
+		enabled: false,
+	});
+
+	const closedQuery = useInfiniteQuery<
+		PRPage,
+		Error,
+		{ pages: PRPage[]; pageParams: (string | null)[] },
+		string[],
+		string | null
+	>({
+		queryKey: closedQueryKey,
+		queryFn: async ({ pageParam }) => {
+			if (!onFetchPRPage)
+				return {
+					prs: [],
+					pageInfo: { hasNextPage: false, endCursor: null },
+				};
+			return onFetchPRPage(owner, repo, "closed", pageParam) as Promise<PRPage>;
+		},
+		initialPageParam: null,
+		getNextPageParam: (lastPage) =>
+			lastPage.pageInfo.hasNextPage ? lastPage.pageInfo.endCursor : undefined,
+		enabled: false,
+	});
+
+	const openPRs = useMemo(
+		() => openQuery.data?.pages.flatMap((p) => p.prs) ?? initialOpenPRs,
+		[openQuery.data, initialOpenPRs],
+	);
+
+	const closedAllPRs = useMemo(
+		() => closedQuery.data?.pages.flatMap((p) => p.prs) ?? [],
+		[closedQuery.data],
+	);
+
+	const closedPRsLoaded = closedQuery.data !== undefined;
+
+	// Fetch closed PRs on mount if URL has ?tab=merged or ?tab=closed
+	useEffect(() => {
+		if (initialTab !== "open" && !closedQuery.data && !closedQuery.isFetching) {
+			closedQuery.refetch();
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
+	const handleTabChange = useCallback(
+		(tab: TabState) => {
+			setState(tab);
+			const url = new URL(window.location.href);
+			if (tab === "open") {
+				url.searchParams.delete("tab");
+			} else {
+				url.searchParams.set("tab", tab);
+			}
+			window.history.replaceState(null, "", url.toString());
+			if (tab !== "open" && !closedQuery.data && !closedQuery.isFetching) {
+				closedQuery.refetch();
+			}
+		},
+		[closedQuery],
+	);
+
+	const { statusMap, loaded: checkStatusesLoaded } = useBatchCheckStatuses(
+		owner,
+		repo,
+		openPRs,
+		onFetchAllCheckStatuses,
+	);
+
+	const prefetchedRef = useRef(new Set<number>());
+	const handlePRHover = useCallback(
+		(prNumber: number, authorLogin?: string | null) => {
+			if (!onPrefetchPRDetail || prefetchedRef.current.has(prNumber)) return;
+			prefetchedRef.current.add(prNumber);
+			onPrefetchPRDetail(owner, repo, prNumber, authorLogin);
+		},
+		[owner, repo, onPrefetchPRDetail],
+	);
+
+	useEffect(() => {
+		setCountAdjustments({ open: 0, merged: 0, closed: 0 });
+	}, [openPRs, closedAllPRs]);
+
+	useMutationSubscription(
+		["pr:merged", "pr:closed", "pr:reopened"],
+		(event: MutationEvent) => {
+			if (!isRepoEvent(event, owner, repo)) return;
+			setCountAdjustments((prev) => {
+				switch (event.type) {
+					case "pr:merged":
+						return {
+							...prev,
+							open: prev.open - 1,
+							merged: prev.merged + 1,
+						};
+					case "pr:closed":
+						return {
+							...prev,
+							open: prev.open - 1,
+							closed: prev.closed + 1,
+						};
+					case "pr:reopened":
+						return {
+							...prev,
+							open: prev.open + 1,
+							closed: prev.closed - 1,
+						};
+					default:
+						return prev;
+				}
+			});
+		},
+	);
+
+	const allPRs = useMemo(() => [...openPRs, ...closedAllPRs], [openPRs, closedAllPRs]);
+
+	const authors = useMemo(() => {
+		const seen = new Map<string, PRUser>();
+		for (const pr of allPRs) {
+			if (pr.user && !seen.has(pr.user.login)) {
+				seen.set(pr.user.login, pr.user);
+			}
+		}
+		return [...seen.values()];
+	}, [allPRs]);
+
+	const filteredAuthors = useMemo(() => {
+		if (!authorSearch) return authors.slice(0, 8);
+		const q = authorSearch.toLowerCase();
+		return authors.filter((a) => a.login.toLowerCase().includes(q)).slice(0, 8);
+	}, [authors, authorSearch]);
+
+	const selectedAuthorData = useMemo(
+		() => authors.find((a) => a.login === selectedAuthor) ?? null,
+		[authors, selectedAuthor],
+	);
+
+	useClickOutside(
+		authorRef,
+		useCallback(() => setAuthorDropdownOpen(false), []),
+	);
+
+	const labels = useMemo(() => {
+		const seen = new Map<string, { name: string; color: string }>();
+		for (const pr of allPRs) {
+			for (const label of pr.labels) {
+				if (label.name && !seen.has(label.name)) {
+					seen.set(label.name, {
+						name: label.name,
+						color: label.color || "888",
+					});
+				}
+			}
+		}
+		return [...seen.values()].slice(0, 10);
+	}, [allPRs]);
+
+	const baseBranches = useMemo(() => {
+		const seen = new Set<string>();
+		for (const pr of allPRs) {
+			if (pr.base?.ref) seen.add(pr.base.ref);
+		}
+		return [...seen].slice(0, 8);
+	}, [allPRs]);
+
+	const activeFilterCount =
+		(draftFilter !== "all" ? 1 : 0) +
+		(reviewFilter !== "all" ? 1 : 0) +
+		(assigneeFilter !== "all" ? 1 : 0) +
+		(selectedBranch ? 1 : 0) +
+		(selectedAuthor ? 1 : 0) +
+		(selectedLabel ? 1 : 0);
+
+	const clearAllFilters = () => {
+		setSearch("");
+		setSelectedAuthor(null);
+		setAuthorSearch("");
+		setAuthorPRs(null);
+		setSelectedLabel(null);
+		setDraftFilter("all");
+		setReviewFilter("all");
+		setAssigneeFilter("all");
+		setSelectedBranch(null);
+	};
+
+	const currentOpenPRs = authorPRs ? authorPRs.open : openPRs;
+	const currentClosedPRs = authorPRs ? authorPRs.closed : closedAllPRs;
+
+	const mergedPRs = useMemo(
+		() =>
+			authorPRs
+				? currentClosedPRs.filter((pr) => !!pr.merged_at)
+				: closedPRsLoaded
+					? currentClosedPRs.filter((pr) => !!pr.merged_at)
+					: (initialMergedPreview ?? []),
+		[authorPRs, currentClosedPRs, closedPRsLoaded, initialMergedPreview],
+	);
+	const closedUnmergedPRs = useMemo(
+		() =>
+			authorPRs
+				? currentClosedPRs.filter((pr) => !pr.merged_at)
+				: closedPRsLoaded
+					? currentClosedPRs.filter((pr) => !pr.merged_at)
+					: (initialClosedPreview ?? []),
+		[authorPRs, currentClosedPRs, closedPRsLoaded, initialClosedPreview],
+	);
+
+	const basePRs =
+		state === "open"
+			? currentOpenPRs
+			: state === "merged"
+				? mergedPRs
+				: closedUnmergedPRs;
+
+	const filtered = useMemo(() => {
+		const q = search.toLowerCase();
+		return basePRs
+			.filter((pr) => {
+				if (q) {
+					const matchesSearch =
+						pr.number.toString().includes(q) ||
+						pr.title.toLowerCase().includes(q) ||
+						pr.user?.login.toLowerCase().includes(q) ||
+						(pr.head?.ref?.toLowerCase().includes(q) ??
+							false) ||
+						(pr.base?.ref?.toLowerCase().includes(q) ??
+							false) ||
+						pr.labels.some((l) =>
+							l.name?.toLowerCase().includes(q),
+						);
+					if (!matchesSearch) return false;
+				}
+				if (
+					!authorPRs &&
+					selectedAuthor &&
+					pr.user?.login !== selectedAuthor
+				)
+					return false;
+				if (
+					selectedLabel &&
+					!pr.labels.some((l) => l.name === selectedLabel)
+				)
+					return false;
+				if (draftFilter === "ready" && pr.draft) return false;
+				if (draftFilter === "draft" && !pr.draft) return false;
+				if (
+					reviewFilter === "has_reviewers" &&
+					(pr.requested_reviewers?.length ?? 0) === 0
+				)
+					return false;
+				if (
+					reviewFilter === "no_reviewers" &&
+					(pr.requested_reviewers?.length ?? 0) > 0
+				)
+					return false;
+				if (
+					assigneeFilter === "assigned" &&
+					(pr.assignees?.length ?? 0) === 0
+				)
+					return false;
+				if (
+					assigneeFilter === "unassigned" &&
+					(pr.assignees?.length ?? 0) > 0
+				)
+					return false;
+				if (selectedBranch && pr.base?.ref !== selectedBranch) return false;
+				return true;
+			})
+			.sort((a, b) => {
+				switch (sort) {
+					case "newest":
+						return (
+							new Date(b.created_at).getTime() -
+							new Date(a.created_at).getTime()
+						);
+					case "oldest":
+						return (
+							new Date(a.created_at).getTime() -
+							new Date(b.created_at).getTime()
+						);
+					case "comments":
+						return (
+							(b.comments ?? 0) +
+							(b.review_comments ?? 0) -
+							((a.comments ?? 0) +
+								(a.review_comments ?? 0))
+						);
+					default:
+						return (
+							new Date(b.updated_at).getTime() -
+							new Date(a.updated_at).getTime()
+						);
+				}
+			});
+	}, [
+		basePRs,
+		search,
+		sort,
+		selectedAuthor,
+		selectedLabel,
+		draftFilter,
+		reviewFilter,
+		assigneeFilter,
+		selectedBranch,
+		authorPRs,
+	]);
+
+	const activeQuery = state === "open" ? openQuery : closedQuery;
+	const canFetchMore = activeQuery.hasNextPage && !activeQuery.isFetchingNextPage;
+
+	const sentinelRef = useRef<HTMLDivElement>(null);
+	useEffect(() => {
+		const sentinel = sentinelRef.current;
+		if (!sentinel) return;
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0]?.isIntersecting && canFetchMore) {
+					activeQuery.fetchNextPage();
+				}
+			},
+			{ rootMargin: "1500px" },
+		);
+		observer.observe(sentinel);
+		return () => observer.disconnect();
+	}, [canFetchMore, activeQuery]);
+
+	return (
+		<div className="px-2 sm:px-6">
+			{/* Toolbar */}
+			<div className="sticky top-0 z-10 bg-background pb-3 pt-4 before:content-[''] before:absolute before:left-0 before:right-0 before:bottom-full before:h-8 before:bg-background">
+				{/* Row 1: Search + Open/Closed + Sort */}
+				<div className="flex flex-col md:flex-row md:items-center gap-2 mb-3">
+					<div className="w-full md:contents">
+						<ListSearchInput
+							placeholder="Search pull requests..."
+							value={search}
+							onChange={setSearch}
+						/>
+					</div>
+					<div className="flex items-center gap-2 md:contents">
+						<SortCycleButton
+							sort={sort}
+							cycle={sortCycle}
+							labels={sortLabels}
+							onSort={setSort}
+						/>
+						<FiltersButton
+							open={showFilters}
+							activeCount={activeFilterCount}
+							onToggle={() => setShowFilters((v) => !v)}
+						/>
+						<ClearFiltersButton
+							show={activeFilterCount > 0}
+							onClear={clearAllFilters}
+						/>
+						<Link
+							href={`/repos/${owner}/${repo}/pulls/new`}
+							className="flex ml-auto items-center gap-1.5 px-3 py-1.5 text-xs bg-primary hover:bg-primary/90 text-background transition-colors cursor-pointer rounded-sm"
+						>
+							<Plus className="w-3 h-3" />
+							New PR
+						</Link>
+					</div>
+				</div>
+
+				{/* Advanced filters panel */}
+				{showFilters && (
+					<div className="border border-border p-3 mb-3 space-y-3">
+						{/* Draft status */}
+						<div className="flex items-center gap-2">
+							<span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/50 w-16 shrink-0">
+								Status
+							</span>
+							<div className="flex items-center border border-border divide-x divide-border">
+								{(
+									[
+										["all", "All"],
+										["ready", "Ready"],
+										["draft", "Draft"],
+									] as [DraftFilter, string][]
+								).map(([value, label]) => (
+									<button
+										key={value}
+										onClick={() =>
+											setDraftFilter(
+												value,
+											)
+										}
+										className={cn(
+											"px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider transition-colors cursor-pointer",
+											draftFilter ===
+												value
+												? "bg-muted/50 dark:bg-white/4 text-foreground"
+												: "text-muted-foreground hover:text-foreground/60 hover:bg-muted/60 dark:hover:bg-white/3",
+										)}
+									>
+										{label}
+									</button>
+								))}
+							</div>
+						</div>
+
+						{/* Review status */}
+						<div className="flex items-center gap-2">
+							<span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/50 w-16 shrink-0">
+								Review
+							</span>
+							<div className="flex items-center border border-border divide-x divide-border">
+								{(
+									[
+										["all", "All"],
+										[
+											"has_reviewers",
+											"Requested",
+										],
+										[
+											"no_reviewers",
+											"None",
+										],
+									] as [
+										ReviewFilter,
+										string,
+									][]
+								).map(([value, label]) => (
+									<button
+										key={value}
+										onClick={() =>
+											setReviewFilter(
+												value,
+											)
+										}
+										className={cn(
+											"px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider transition-colors cursor-pointer",
+											reviewFilter ===
+												value
+												? "bg-muted/50 dark:bg-white/4 text-foreground"
+												: "text-muted-foreground hover:text-foreground/60 hover:bg-muted/60 dark:hover:bg-white/3",
+										)}
+									>
+										{label}
+									</button>
+								))}
+							</div>
+						</div>
+
+						{/* Assignee status */}
+						<div className="flex items-center gap-2">
+							<span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/50 w-16 shrink-0">
+								Assign
+							</span>
+							<div className="flex items-center border border-border divide-x divide-border">
+								{(
+									[
+										["all", "All"],
+										[
+											"assigned",
+											"Assigned",
+										],
+										[
+											"unassigned",
+											"Unassigned",
+										],
+									] as [
+										AssigneeFilter,
+										string,
+									][]
+								).map(([value, label]) => (
+									<button
+										key={value}
+										onClick={() =>
+											setAssigneeFilter(
+												value,
+											)
+										}
+										className={cn(
+											"px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider transition-colors cursor-pointer",
+											assigneeFilter ===
+												value
+												? "bg-muted/50 dark:bg-white/4 text-foreground"
+												: "text-muted-foreground hover:text-foreground/60 hover:bg-muted/60 dark:hover:bg-white/3",
+										)}
+									>
+										{label}
+									</button>
+								))}
+							</div>
+						</div>
+
+						{/* Author */}
+						<div className="flex items-center gap-2">
+							<span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/50 w-16 shrink-0">
+								Author
+							</span>
+							<div ref={authorRef} className="relative">
+								{selectedAuthor &&
+								selectedAuthorData ? (
+									<button
+										onClick={() => {
+											setSelectedAuthor(
+												null,
+											);
+											setAuthorSearch(
+												"",
+											);
+											setAuthorPRs(
+												null,
+											);
+										}}
+										className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-mono border border-foreground/30 bg-muted/50 dark:bg-white/4 text-foreground transition-colors cursor-pointer"
+									>
+										<GithubAvatar
+											src={
+												selectedAuthorData.avatar_url
+											}
+											alt={
+												selectedAuthorData.login
+											}
+											size={14}
+											className="rounded-full"
+										/>
+										{
+											selectedAuthorData.login
+										}
+										<X className="w-2.5 h-2.5 text-muted-foreground" />
+									</button>
+								) : (
+									<div>
+										<input
+											type="text"
+											placeholder="Search authors..."
+											value={
+												authorSearch
+											}
+											onChange={(
+												e,
+											) => {
+												setAuthorSearch(
+													e
+														.target
+														.value,
+												);
+												setAuthorDropdownOpen(
+													true,
+												);
+											}}
+											onFocus={() =>
+												setAuthorDropdownOpen(
+													true,
+												)
+											}
+											className="w-full sm:w-48 bg-transparent border border-border px-2 py-1 text-[10px] font-mono placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground/20 transition-colors"
+										/>
+										{authorDropdownOpen &&
+											filteredAuthors.length >
+												0 && (
+												<div className="absolute z-20 top-full left-0 mt-1 w-full sm:w-56 border border-border bg-background shadow-lg max-h-48 overflow-y-auto">
+													{filteredAuthors.map(
+														(
+															author,
+														) => (
+															<button
+																key={
+																	author.login
+																}
+																onClick={() => {
+																	setSelectedAuthor(
+																		author.login,
+																	);
+																	setAuthorSearch(
+																		"",
+																	);
+																	setAuthorDropdownOpen(
+																		false,
+																	);
+																	if (
+																		onAuthorFilter
+																	) {
+																		startTransition(
+																			async () => {
+																				const result =
+																					await onAuthorFilter(
+																						owner,
+																						repo,
+																						author.login,
+																					);
+																				setAuthorPRs(
+																					result as {
+																						open: PR[];
+																						closed: PR[];
+																					},
+																				);
+																			},
+																		);
+																	}
+																}}
+																className="flex items-center gap-2 w-full px-2.5 py-1.5 text-[11px] font-mono text-muted-foreground hover:bg-muted/60 dark:hover:bg-white/3 hover:text-foreground transition-colors cursor-pointer"
+															>
+																<GithubAvatar
+																	src={
+																		author.avatar_url
+																	}
+																	alt={
+																		author.login
+																	}
+																	size={
+																		16
+																	}
+																	className="rounded-full"
+																/>
+																{
+																	author.login
+																}
+															</button>
+														),
+													)}
+												</div>
+											)}
+									</div>
+								)}
+							</div>
+						</div>
+
+						{/* Base branch */}
+						{baseBranches.length > 1 && (
+							<div className="flex items-center gap-2">
+								<span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/50 w-16 shrink-0">
+									Base
+								</span>
+								<div className="flex items-center gap-1.5 flex-wrap">
+									{baseBranches.map(
+										(branch) => (
+											<button
+												key={
+													branch
+												}
+												onClick={() =>
+													setSelectedBranch(
+														(
+															b,
+														) =>
+															b ===
+															branch
+																? null
+																: branch,
+													)
+												}
+												className={cn(
+													"flex items-center gap-1.5 px-2 py-1 text-[10px] border rounded-full transition-colors cursor-pointer font-mono",
+													selectedBranch ===
+														branch
+														? "border-foreground/30 bg-muted/50 dark:bg-white/4 text-foreground"
+														: "border-border text-muted-foreground hover:bg-muted/60 dark:hover:bg-white/3",
+												)}
+											>
+												<GitBranch className="w-2.5 h-2.5" />
+												{
+													branch
+												}
+											</button>
+										),
+									)}
+								</div>
+							</div>
+						)}
+
+						{/* Labels */}
+						{labels.length > 0 && (
+							<div className="flex items-center gap-2">
+								<span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/50 w-16 shrink-0">
+									Label
+								</span>
+								<div className="flex items-center gap-1.5 flex-wrap">
+									{labels.map((label) => (
+										<button
+											key={
+												label.name
+											}
+											onClick={() =>
+												setSelectedLabel(
+													(
+														l,
+													) =>
+														l ===
+														label.name
+															? null
+															: label.name,
+												)
+											}
+											className={cn(
+												"flex items-center gap-1.5 px-2 py-1 text-[10px] border rounded-full transition-colors cursor-pointer font-mono",
+												selectedLabel ===
+													label.name
+													? "border-foreground/30 bg-muted/50 dark:bg-white/4 text-foreground"
+													: "border-border text-muted-foreground hover:bg-muted/60 dark:hover:bg-white/3",
+											)}
+										>
+											<span
+												className="w-2 h-2 rounded-full shrink-0"
+												style={{
+													backgroundColor: `#${label.color}`,
+												}}
+											/>
+											{label.name}
+										</button>
+									))}
+								</div>
+							</div>
+						)}
+					</div>
+				)}
+
+				{/* Row 2: State tabs */}
+				<div className="flex items-center border-b border-border/40">
+					{[
+						{
+							key: "open" as TabState,
+							label: "Open",
+							icon: (
+								<GitPullRequest className="w-3 h-3" />
+							),
+							count: authorPRs
+								? currentOpenPRs.length
+								: openCount + countAdjustments.open,
+						},
+						{
+							key: "merged" as TabState,
+							label: "Merged",
+							icon: <GitMerge className="w-3 h-3" />,
+							count: authorPRs
+								? mergedPRs.length
+								: mergedCount +
+									countAdjustments.merged,
+						},
+						{
+							key: "closed" as TabState,
+							label: "Closed",
+							icon: (
+								<GitPullRequestClosed className="w-3 h-3" />
+							),
+							count: authorPRs
+								? closedUnmergedPRs.length
+								: closedCount +
+									countAdjustments.closed,
+						},
+					].map((tab) => (
+						<button
+							key={tab.key}
+							onClick={() => handleTabChange(tab.key)}
+							className={cn(
+								"relative flex items-center gap-1.5 px-3 pb-2.5 pt-1 text-[12px] transition-colors cursor-pointer",
+								state === tab.key
+									? "text-foreground"
+									: "text-muted-foreground/50 hover:text-foreground/70",
+							)}
+						>
+							{tab.icon}
+							<span className="hidden sm:inline">
+								{tab.label}
+							</span>
+							<span
+								className={cn(
+									"text-[10px] tabular-nums font-mono",
+									state === tab.key
+										? "text-foreground/50"
+										: "text-muted-foreground/30",
+								)}
+							>
+								{tab.count}
+							</span>
+							{state === tab.key && (
+								<span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
+							)}
+						</button>
+					))}
+				</div>
+			</div>
+
+			{/* PR List */}
+			<div className="relative flex-1 min-h-0 overflow-y-auto divide-y divide-border">
+				<LoadingOverlay show={isPending} />
+				{filtered.map((pr) => {
+					const isMerged = !!pr.merged_at;
+					const totalComments =
+						(pr.comments ?? 0) + (pr.review_comments ?? 0);
+					const isCurrentUserAuthor =
+						!!pr.user?.login &&
+						!!currentUserLogin &&
+						pr.user.login.toLowerCase() ===
+							currentUserLogin.toLowerCase();
+
+					return (
+						<Link
+							key={pr.id}
+							href={`/${owner}/${repo}/pulls/${pr.number}`}
+							onMouseEnter={() =>
+								handlePRHover(
+									pr.number,
+									pr.user?.login,
+								)
+							}
+							onContextMenu={(e) =>
+								handleContextMenu(e, pr)
+							}
+							className="group flex items-start gap-3 px-4 py-3 hover:bg-muted/50 dark:hover:bg-white/2 transition-colors"
+						>
+							{isMerged ? (
+								<GitMerge className="w-3.5 h-3.5 shrink-0 mt-0.5 text-alert-important" />
+							) : pr.state === "closed" ? (
+								<GitPullRequestClosed className="w-3.5 h-3.5 shrink-0 mt-0.5 text-destructive" />
+							) : (
+								<GitPullRequest
+									className={cn(
+										"w-3.5 h-3.5 shrink-0 mt-0.5",
+										pr.draft
+											? "text-muted-foreground/70"
+											: "text-success",
+									)}
+								/>
+							)}
+							<div className="flex-1 min-w-0">
+								<div className="flex items-center gap-2 flex-wrap">
+									<span className="text-sm truncate group-hover:text-foreground transition-colors">
+										{pr.title}
+									</span>
+									{pr.draft && (
+										<span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-muted-foreground/10 text-muted-foreground/70 shrink-0">
+											Draft
+										</span>
+									)}
+									{pr.labels
+										.filter(
+											(l) =>
+												l.name,
+										)
+										.slice(0, 3)
+										.map((label) => (
+											<LabelBadge
+												key={
+													label.name
+												}
+												label={
+													label
+												}
+											/>
+										))}
+									{(pr.requested_reviewers
+										?.length ?? 0) >
+										0 && (
+										<span className="flex items-center ml-auto shrink-0 -space-x-1.5">
+											{(
+												pr.requested_reviewers ??
+												[]
+											)
+												.slice(
+													0,
+													3,
+												)
+												.map(
+													(
+														r,
+													) => (
+														<UserTooltip
+															key={
+																r.login
+															}
+															username={
+																r.login
+															}
+														>
+															<Link
+																href={`/users/${r.login}`}
+															>
+																<GithubAvatar
+																	src={
+																		r.avatar_url
+																	}
+																	alt={
+																		r.login
+																	}
+																	size={
+																		16
+																	}
+																	className="rounded-full border border-border hover:ring-2 hover:ring-primary/50 transition-all"
+																/>
+															</Link>
+														</UserTooltip>
+													),
+												)}
+										</span>
+									)}
+								</div>
+
+								<div className="flex items-center gap-2 sm:gap-3 mt-1 flex-wrap">
+									{pr.user && (
+										<UserTooltip
+											username={
+												pr
+													.user
+													.login
+											}
+										>
+											<Link
+												href={`/users/${pr.user.login}`}
+												className="flex items-center gap-1 text-[11px] text-muted-foreground/60 hover:text-foreground transition-colors"
+											>
+												<GithubAvatar
+													src={
+														pr
+															.user
+															.avatar_url
+													}
+													alt={
+														pr
+															.user
+															.login
+													}
+													size={
+														14
+													}
+													className="rounded-full"
+												/>
+												<span
+													className={cn(
+														"font-mono text-[10px] hover:underline",
+														isCurrentUserAuthor &&
+															"text-warning font-semibold",
+													)}
+												>
+													{
+														pr
+															.user
+															.login
+													}
+												</span>
+											</Link>
+										</UserTooltip>
+									)}
+									{pr.base?.ref &&
+										pr.head?.ref && (
+											<span className="hidden sm:flex items-center gap-1 font-mono text-muted-foreground text-[10px]">
+												<GitBranch className="w-2.5 h-2.5" />
+												{
+													pr
+														.base
+														.ref
+												}
+												<span className="mx-0.5">
+													&larr;
+												</span>
+												{pr.head_repo_owner &&
+												pr.head_repo_owner !==
+													owner ? (
+													<>
+														<span className="text-muted-foreground/40">
+															{
+																pr.head_repo_owner
+															}
+															:
+														</span>
+														{
+															pr
+																.head
+																.ref
+														}
+													</>
+												) : (
+													pr
+														.head
+														.ref
+												)}
+											</span>
+										)}
+								</div>
+
+								<div className="flex items-center gap-2 sm:gap-3 mt-1 flex-wrap">
+									<PRCheckStatus
+										pr={pr}
+										owner={owner}
+										repo={repo}
+										resolvedStatus={
+											statusMap[
+												pr
+													.number
+											]
+										}
+										loaded={
+											checkStatusesLoaded
+										}
+									/>
+									<span className="text-[11px] font-mono text-muted-foreground/70">
+										#{pr.number}
+									</span>
+									<span className="flex items-center gap-1 text-[11px] text-muted-foreground/50">
+										<Clock className="w-3 h-3" />
+										<TimeAgo
+											date={
+												pr.created_at
+											}
+										/>
+									</span>
+									{totalComments > 0 && (
+										<span className="flex items-center gap-1 text-[11px] text-muted-foreground/50">
+											<MessageSquare className="w-3 h-3" />
+											{
+												totalComments
+											}
+										</span>
+									)}
+									<span className="hidden sm:inline font-mono text-success text-[10px]">
+										+{pr.additions ?? 0}
+									</span>
+									<span className="hidden sm:inline font-mono text-destructive text-[10px]">
+										-{pr.deletions ?? 0}
+									</span>
+									<span className="hidden sm:flex items-center gap-1 font-mono text-muted-foreground text-[10px]">
+										<FileCode2 className="w-2.5 h-2.5" />
+										{pr.changed_files ??
+											0}{" "}
+										file
+										{(pr.changed_files ??
+											0) !== 1
+											? "s"
+											: ""}
+									</span>
+
+									{(pr.assignees?.length ??
+										0) > 0 && (
+										<span className="flex items-center ml-auto shrink-0 -space-x-1.5">
+											{(
+												pr.assignees ??
+												[]
+											)
+												.slice(
+													0,
+													3,
+												)
+												.map(
+													(
+														a,
+													) => (
+														<UserTooltip
+															key={
+																a.login
+															}
+															username={
+																a.login
+															}
+														>
+															<Link
+																href={`/users/${a.login}`}
+															>
+																<GithubAvatar
+																	src={
+																		a.avatar_url
+																	}
+																	alt={
+																		a.login
+																	}
+																	size={
+																		16
+																	}
+																	className="rounded-full border border-border hover:ring-2 hover:ring-primary/50 transition-all"
+																/>
+															</Link>
+														</UserTooltip>
+													),
+												)}
+										</span>
+									)}
+								</div>
+							</div>
+						</Link>
+					);
+				})}
+
+				{activeQuery.isFetching && (
+					<div
+						className={cn(
+							"text-center",
+							filtered.length > 0
+								? "py-6 border-t border-border/30"
+								: "py-16",
+						)}
+					>
+						<Loader2 className="w-4 h-4 text-muted-foreground mx-auto mb-2 animate-spin" />
+						<p className="text-xs text-muted-foreground/50 font-mono">
+							Loading more pull requests…
+						</p>
+					</div>
+				)}
+
+				<div ref={sentinelRef} className="h-1" />
+
+				{!activeQuery.isFetching && filtered.length === 0 && (
+					<div className="py-16 text-center">
+						<GitPullRequest className="w-6 h-6 text-muted-foreground/30 mx-auto mb-3" />
+						<p className="text-xs text-muted-foreground font-mono">
+							{search || activeFilterCount > 0
+								? "No pull requests match your filters"
+								: state === "merged"
+									? "No merged pull requests"
+									: `No ${state} pull requests`}
+						</p>
+					</div>
+				)}
+			</div>
+
+			{/* Context menu */}
+			{contextMenu && (
+				<PRContextMenu
+					x={contextMenu.x}
+					y={contextMenu.y}
+					pr={contextMenu.pr}
+					owner={owner}
+					repo={repo}
+					onClose={() => setContextMenu(null)}
+					onPeek={() => handlePeek(contextMenu.pr)}
+					onFilterByAuthor={handleContextFilterByAuthor}
+					onClosePR={onClosePR}
+					onReopenPR={onReopenPR}
+				/>
+			)}
+
+			{/* Peek sheet */}
+			<PRPeekSheet
+				open={peekOpen}
+				onOpenChange={setPeekOpen}
+				owner={owner}
+				repo={repo}
+				pr={peekPR}
+				peekData={peekData}
+				isLoading={isPeekLoading}
+				sheetWidth={peekSheetWidth}
+				isResizing={isPeekResizing}
+				onResize={handlePeekResize}
+				onResizeEnd={handlePeekResizeEnd}
+				onResetWidth={resetPeekSheetWidth}
+			/>
+		</div>
+	);
+}
