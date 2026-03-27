@@ -25,12 +25,27 @@ fetch  ──(HTTP :8787)───→  (cache)
 - **Tiny footprint** — ~3-5MB memory, <2ms cold start (Rust native binary)
 - **Zero config** — sensible defaults, just start and go
 
+## Installation
+
+### Homebrew (macOS / Linux)
+
+```bash
+brew install pleaseai/tap/local-hub
+```
+
+### Cargo
+
+```bash
+cargo install --git https://github.com/pleaseai/local-hub
+```
+
+### Binary
+
+Download platform-specific binaries from [Releases](https://github.com/pleaseai/local-hub/releases).
+
 ## Quick start
 
 ```bash
-# Install
-cargo install --git https://github.com/pleaseai/local-hub
-
 # Start the proxy
 local-hub start
 
