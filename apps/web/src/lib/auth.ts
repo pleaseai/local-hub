@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./db";
 import { Octokit } from "@octokit/rest";
+import { createConfiguredOctokit } from "@/lib/github-config";
 import { redis } from "./redis";
 import { waitUntil } from "@vercel/functions";
 import { all } from "better-all";
@@ -20,7 +21,7 @@ async function getOctokitUser(token: string) {
 		`github_user:${token}`,
 	);
 	if (cached) return cached;
-	const octokit = new Octokit({ auth: token });
+	const octokit = createConfiguredOctokit(token);
 	const githubUser = await octokit.users.getAuthenticated();
 	const hash = await createHash("SHA-256", "base64").digest(token);
 	waitUntil(redis.set(`github_user:${hash}`, JSON.stringify(githubUser.data), { ex: 3600 }));

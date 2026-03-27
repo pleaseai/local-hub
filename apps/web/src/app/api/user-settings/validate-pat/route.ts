@@ -1,4 +1,5 @@
 import { Octokit } from "@octokit/rest";
+import { createConfiguredOctokit } from "@/lib/github-config";
 import { auth } from "@/lib/auth";
 import { getErrorMessage, getErrorStatus } from "@/lib/utils";
 import { headers } from "next/headers";
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
 	}
 
 	try {
-		const octokit = new Octokit({ auth: pat });
+		const octokit = createConfiguredOctokit(pat);
 		const [userResp, rateLimitResp] = await Promise.all([
 			octokit.users.getAuthenticated(),
 			octokit.rateLimit.get(),

@@ -1,4 +1,5 @@
 import { Octokit } from "@octokit/rest";
+import { createConfiguredOctokit } from "@/lib/github-config";
 import { getCustomThemeBySlug, syncCustomThemeData } from "@/lib/theme-store";
 import { scanCustomThemeRepo, ScanError } from "@/lib/extension-scanner";
 import { getServerSession } from "@/lib/auth";
@@ -20,7 +21,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ sl
 		return Response.json({ error: "GitHub token not available" }, { status: 401 });
 	}
 
-	const octokit = new Octokit({ auth: token });
+	const octokit = createConfiguredOctokit(token);
 
 	try {
 		const scan = await scanCustomThemeRepo(octokit, existing.owner, existing.repo);

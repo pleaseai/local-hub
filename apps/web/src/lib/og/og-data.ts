@@ -1,7 +1,7 @@
 // Lightweight data fetching for OG images.
 // SECURITY: Only returns data for PUBLIC repositories to prevent leaking private repo data.
 
-const GITHUB_API = "https://api.github.com";
+const GITHUB_API = process.env.GITHUB_API_URL || "https://api.github.com";
 
 function ghHeaders(): HeadersInit {
 	const h: Record<string, string> = {

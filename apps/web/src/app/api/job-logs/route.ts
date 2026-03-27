@@ -1,3 +1,4 @@
+import { GITHUB_API_URL, GITHUB_GRAPHQL_URL } from "@/lib/github-config";
 import { NextRequest, NextResponse } from "next/server";
 import { getGitHubToken } from "@/lib/github";
 
@@ -192,14 +193,14 @@ export async function GET(request: NextRequest) {
 		};
 		const [logsRes, jobRes] = await Promise.all([
 			fetch(
-				`https://api.github.com/repos/${encodedOwner}/${encodedRepo}/actions/jobs/${encodedJobId}/logs`,
+				`${GITHUB_API_URL}/repos/${encodedOwner}/${encodedRepo}/actions/jobs/${encodedJobId}/logs`,
 				{
 					headers: commonHeaders,
 					redirect: "follow",
 				},
 			),
 			fetch(
-				`https://api.github.com/repos/${encodedOwner}/${encodedRepo}/actions/jobs/${encodedJobId}`,
+				`${GITHUB_API_URL}/repos/${encodedOwner}/${encodedRepo}/actions/jobs/${encodedJobId}`,
 				{
 					headers: commonHeaders,
 				},
