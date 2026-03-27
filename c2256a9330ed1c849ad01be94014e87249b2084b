@@ -1,0 +1,23 @@
+.github/workflows/release.yml
+  6815fda01ba5f5ad 1-91
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "c2256a9330ed1c849ad01be94014e87249b2084b",
+  "prompts": {
+    "6815fda01ba5f5ad": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ce0431f1-dd90-43d9-a134-2e4771a6a4d4",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Minsu Lee <amond@amond.net>",
+      "messages": [],
+      "total_additions": 91,
+      "total_deletions": 0,
+      "accepted_lines": 91,
+      "overriden_lines": 0
+    }
+  }
+}
