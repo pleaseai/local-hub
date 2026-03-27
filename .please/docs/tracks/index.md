@@ -5,12 +5,12 @@
 ## Active
 
 | Track | Feature | Type | Issue | Started | Status |
-|-------|---------|------|-------|---------|--------|
+| ----- | ------- | ---- | ----- | ------- | ------ |
 
 ## Recently Completed
 
 | Track | Feature | Type | Issue | Completed | Outcome |
-|-------|---------|------|-------|-----------|---------|
+| ----- | ------- | ---- | ----- | --------- | ------- |
 
 ## Tech Debt
 

@@ -23,11 +23,11 @@ Eliminate GitHub API latency and rate limit friction for developers by providing
 
 ### Supported Clients
 
-| Client | Connection Method |
-|--------|------------------|
-| `gh` CLI | Unix socket (`http_unix_socket` config) |
-| `fetch` / `octokit` | HTTP TCP port (localhost:8787) |
-| `curl` | Either method |
+| Client              | Connection Method                       |
+| ------------------- | --------------------------------------- |
+| `gh` CLI            | Unix socket (`http_unix_socket` config) |
+| `fetch` / `octokit` | HTTP TCP port (localhost:8787)          |
+| `curl`              | Either method                           |
 
 ### Caching Strategy
 

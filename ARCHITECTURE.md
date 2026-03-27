@@ -10,6 +10,7 @@ GitHub API requests from any client (`gh` CLI, `fetch`, `octokit`), caches GET
 responses locally, and serves them with near-zero latency on subsequent requests.
 
 The proxy listens on two interfaces simultaneously:
+
 - **Unix socket** — for `gh` CLI via its `http_unix_socket` config
 - **TCP port** — for `fetch`, `octokit`, and other HTTP clients
 
@@ -19,11 +20,11 @@ cache namespace prefixes.
 
 ## Entry Points
 
-| Path | Purpose |
-|------|---------|
-| `crates/server/src/main.rs` | CLI entry point — parses args, starts server |
+| Path                            | Purpose                                       |
+| ------------------------------- | --------------------------------------------- |
+| `crates/server/src/main.rs`     | CLI entry point — parses args, starts server  |
 | `.github/workflows/release.yml` | CI/CD — release-please + cross-platform build |
-| `Cargo.toml` | Workspace root — dependency versions |
+| `Cargo.toml`                    | Workspace root — dependency versions          |
 
 ## Module Structure
 
@@ -41,10 +42,10 @@ crates/
 
 ### Planned crates
 
-| Crate | Purpose | Status |
-|-------|---------|--------|
-| `server` | Proxy server + CLI | Active |
-| `web` | Dashboard client (via better-hub) | Planned (Phase 4) |
+| Crate    | Purpose                           | Status            |
+| -------- | --------------------------------- | ----------------- |
+| `server` | Proxy server + CLI                | Active            |
+| `web`    | Dashboard client (via better-hub) | Planned (Phase 4) |
 
 ## Data Flow
 
@@ -127,12 +128,12 @@ Client → POST /repos/org/repo/issues → GitHub API
 
 All configuration via CLI flags with environment variable fallbacks:
 
-| Flag | Env | Default |
-|------|-----|---------|
-| `--port` | `LOCAL_HUB_PORT` | `8787` |
-| `--socket` | `LOCAL_HUB_SOCKET` | `~/.local-hub/local-hub.sock` |
-| `--cache-dir` | `LOCAL_HUB_CACHE_DIR` | `~/.local-hub/cache` |
-| `--ttl` | `LOCAL_HUB_TTL` | `300` (seconds) |
+| Flag          | Env                   | Default                       |
+| ------------- | --------------------- | ----------------------------- |
+| `--port`      | `LOCAL_HUB_PORT`      | `8787`                        |
+| `--socket`    | `LOCAL_HUB_SOCKET`    | `~/.local-hub/local-hub.sock` |
+| `--cache-dir` | `LOCAL_HUB_CACHE_DIR` | `~/.local-hub/cache`          |
+| `--ttl`       | `LOCAL_HUB_TTL`       | `300` (seconds)               |
 
 ### Distribution
 

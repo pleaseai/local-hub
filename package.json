@@ -1,10 +1,17 @@
 {
   "name": "local-hub",
-  "private": true,
   "type": "module",
+  "private": true,
   "packageManager": "bun@1.3.11",
+  "scripts": {
+    "lint": "eslint --cache .",
+    "lint:fix": "eslint --cache . --fix"
+  },
   "devDependencies": {
+    "@antfu/eslint-config": "^7.7.3",
     "@commitlint/cli": "^20.5.0",
-    "@commitlint/config-conventional": "^20.5.0"
+    "@commitlint/config-conventional": "^20.5.0",
+    "eslint": "^10.1.0",
+    "eslint-plugin-format": "^2.0.1"
   }
 }

@@ -1,11 +1,14 @@
 pre-commit:
   commands:
     fmt:
-      glob: "*.rs"
+      glob: '*.rs'
       run: cargo fmt -- --check
     clippy:
-      glob: "*.rs"
+      glob: '*.rs'
       run: cargo clippy -- -D warnings
+    eslint:
+      glob: '*.{js,mjs,cjs,ts,mts,json,yaml,yml,md}'
+      run: bunx eslint --fix {staged_files} && git add {staged_files}
 
 commit-msg:
   commands:

@@ -10,21 +10,21 @@
 
 ## Core Dependencies
 
-| Crate | Purpose |
-|-------|---------|
-| `tokio` | Async runtime |
-| `axum` | HTTP server framework |
-| `hyper` | Low-level HTTP (Unix socket support) |
-| `hyper-util` | Hyper utilities (tokio integration) |
-| `reqwest` | HTTP client (GitHub API forwarding) |
-| `redb` | Embedded key-value store (single file, ACID) |
-| `serde` + `serde_json` | JSON serialization |
-| `clap` | CLI argument parsing |
-| `tracing` + `tracing-subscriber` | Structured logging |
-| `sha2` + `hex` | Token hashing |
-| `thiserror` | Error types |
-| `http` | HTTP types |
-| `tower` | Middleware layer |
+| Crate                            | Purpose                                      |
+| -------------------------------- | -------------------------------------------- |
+| `tokio`                          | Async runtime                                |
+| `axum`                           | HTTP server framework                        |
+| `hyper`                          | Low-level HTTP (Unix socket support)         |
+| `hyper-util`                     | Hyper utilities (tokio integration)          |
+| `reqwest`                        | HTTP client (GitHub API forwarding)          |
+| `redb`                           | Embedded key-value store (single file, ACID) |
+| `serde` + `serde_json`           | JSON serialization                           |
+| `clap`                           | CLI argument parsing                         |
+| `tracing` + `tracing-subscriber` | Structured logging                           |
+| `sha2` + `hex`                   | Token hashing                                |
+| `thiserror`                      | Error types                                  |
+| `http`                           | HTTP types                                   |
+| `tower`                          | Middleware layer                             |
 
 ## Project Structure
 
