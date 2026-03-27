@@ -1,0 +1,43 @@
+.gitignore
+  6815fda01ba5f5ad 7-9
+.please/INDEX.md
+  6815fda01ba5f5ad 1-35
+.please/docs/knowledge/product.md
+  6815fda01ba5f5ad 1-51
+.please/docs/product-specs/index.md
+  6815fda01ba5f5ad 1-6
+.please/docs/knowledge/workflow.md
+  6815fda01ba5f5ad 1-128
+.please/docs/knowledge/tech-stack.md
+  6815fda01ba5f5ad 1-49
+.please/docs/tracks/tech-debt-tracker.md
+  6815fda01ba5f5ad 1-13
+.please/config.yml
+  6815fda01ba5f5ad 1-11
+.please/docs/tracks/index.md
+  6815fda01ba5f5ad 1-17
+.please/docs/decisions/index.md
+  6815fda01ba5f5ad 1-6
+.please/docs/knowledge/product-guidelines.md
+  6815fda01ba5f5ad 1-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "800f3da4362a1efa3c3cf19a76e5578e769abcc7",
+  "prompts": {
+    "6815fda01ba5f5ad": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ce0431f1-dd90-43d9-a134-2e4771a6a4d4",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Minsu Lee <amond@amond.net>",
+      "messages": [],
+      "total_additions": 346,
+      "total_deletions": 0,
+      "accepted_lines": 346,
+      "overriden_lines": 0
+    }
+  }
+}
