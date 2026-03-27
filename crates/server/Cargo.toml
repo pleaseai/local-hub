@@ -6,6 +6,10 @@ license.workspace = true
 repository.workspace = true
 description = "Local GitHub API cache proxy"
 
+[lib]
+name = "local_hub"
+path = "src/lib.rs"
+
 [[bin]]
 name = "local-hub"
 path = "src/main.rs"
