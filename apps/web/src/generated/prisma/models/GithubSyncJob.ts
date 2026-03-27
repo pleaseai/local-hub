@@ -1237,7 +1237,6 @@ export type GithubSyncJobCreateManyArgs<ExtArgs extends runtime.Types.Extensions
    * The data used to create many GithubSyncJobs.
    */
   data: Prisma.GithubSyncJobCreateManyInput | Prisma.GithubSyncJobCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
@@ -1256,7 +1255,6 @@ export type GithubSyncJobCreateManyAndReturnArgs<ExtArgs extends runtime.Types.E
    * The data used to create many GithubSyncJobs.
    */
   data: Prisma.GithubSyncJobCreateManyInput | Prisma.GithubSyncJobCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**

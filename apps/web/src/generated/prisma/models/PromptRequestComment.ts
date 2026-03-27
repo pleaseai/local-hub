@@ -1100,7 +1100,6 @@ export type PromptRequestCommentCreateManyArgs<ExtArgs extends runtime.Types.Ext
    * The data used to create many PromptRequestComments.
    */
   data: Prisma.PromptRequestCommentCreateManyInput | Prisma.PromptRequestCommentCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
@@ -1119,7 +1118,6 @@ export type PromptRequestCommentCreateManyAndReturnArgs<ExtArgs extends runtime.
    * The data used to create many PromptRequestComments.
    */
   data: Prisma.PromptRequestCommentCreateManyInput | Prisma.PromptRequestCommentCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**

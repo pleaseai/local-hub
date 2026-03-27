@@ -1123,7 +1123,6 @@ export type PrOverviewAnalysisCreateManyArgs<ExtArgs extends runtime.Types.Exten
    * The data used to create many PrOverviewAnalyses.
    */
   data: Prisma.PrOverviewAnalysisCreateManyInput | Prisma.PrOverviewAnalysisCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
@@ -1142,7 +1141,6 @@ export type PrOverviewAnalysisCreateManyAndReturnArgs<ExtArgs extends runtime.Ty
    * The data used to create many PrOverviewAnalyses.
    */
   data: Prisma.PrOverviewAnalysisCreateManyInput | Prisma.PrOverviewAnalysisCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**

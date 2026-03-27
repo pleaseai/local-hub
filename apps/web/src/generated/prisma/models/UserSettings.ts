@@ -1312,7 +1312,6 @@ export type UserSettingsCreateManyArgs<ExtArgs extends runtime.Types.Extensions.
    * The data used to create many UserSettings.
    */
   data: Prisma.UserSettingsCreateManyInput | Prisma.UserSettingsCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
@@ -1331,7 +1330,6 @@ export type UserSettingsCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Ex
    * The data used to create many UserSettings.
    */
   data: Prisma.UserSettingsCreateManyInput | Prisma.UserSettingsCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**

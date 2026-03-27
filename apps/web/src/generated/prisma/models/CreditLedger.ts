@@ -27,17 +27,17 @@ export type AggregateCreditLedger = {
 }
 
 export type CreditLedgerAvgAggregateOutputType = {
-  amount: runtime.Decimal | null
+  amount: number | null
 }
 
 export type CreditLedgerSumAggregateOutputType = {
-  amount: runtime.Decimal | null
+  amount: number | null
 }
 
 export type CreditLedgerMinAggregateOutputType = {
   id: string | null
   userId: string | null
-  amount: runtime.Decimal | null
+  amount: number | null
   type: string | null
   description: string | null
   expiresAt: Date | null
@@ -47,7 +47,7 @@ export type CreditLedgerMinAggregateOutputType = {
 export type CreditLedgerMaxAggregateOutputType = {
   id: string | null
   userId: string | null
-  amount: runtime.Decimal | null
+  amount: number | null
   type: string | null
   description: string | null
   expiresAt: Date | null
@@ -194,7 +194,7 @@ export type CreditLedgerGroupByArgs<ExtArgs extends runtime.Types.Extensions.Int
 export type CreditLedgerGroupByOutputType = {
   id: string
   userId: string
-  amount: runtime.Decimal
+  amount: number
   type: string
   description: string | null
   expiresAt: Date | null
@@ -227,7 +227,7 @@ export type CreditLedgerWhereInput = {
   NOT?: Prisma.CreditLedgerWhereInput | Prisma.CreditLedgerWhereInput[]
   id?: Prisma.StringFilter<"CreditLedger"> | string
   userId?: Prisma.StringFilter<"CreditLedger"> | string
-  amount?: Prisma.DecimalFilter<"CreditLedger"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount?: Prisma.FloatFilter<"CreditLedger"> | number
   type?: Prisma.StringFilter<"CreditLedger"> | string
   description?: Prisma.StringNullableFilter<"CreditLedger"> | string | null
   expiresAt?: Prisma.DateTimeNullableFilter<"CreditLedger"> | Date | string | null
@@ -252,7 +252,7 @@ export type CreditLedgerWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.CreditLedgerWhereInput[]
   NOT?: Prisma.CreditLedgerWhereInput | Prisma.CreditLedgerWhereInput[]
   userId?: Prisma.StringFilter<"CreditLedger"> | string
-  amount?: Prisma.DecimalFilter<"CreditLedger"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount?: Prisma.FloatFilter<"CreditLedger"> | number
   type?: Prisma.StringFilter<"CreditLedger"> | string
   description?: Prisma.StringNullableFilter<"CreditLedger"> | string | null
   expiresAt?: Prisma.DateTimeNullableFilter<"CreditLedger"> | Date | string | null
@@ -281,7 +281,7 @@ export type CreditLedgerScalarWhereWithAggregatesInput = {
   NOT?: Prisma.CreditLedgerScalarWhereWithAggregatesInput | Prisma.CreditLedgerScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"CreditLedger"> | string
   userId?: Prisma.StringWithAggregatesFilter<"CreditLedger"> | string
-  amount?: Prisma.DecimalWithAggregatesFilter<"CreditLedger"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount?: Prisma.FloatWithAggregatesFilter<"CreditLedger"> | number
   type?: Prisma.StringWithAggregatesFilter<"CreditLedger"> | string
   description?: Prisma.StringNullableWithAggregatesFilter<"CreditLedger"> | string | null
   expiresAt?: Prisma.DateTimeNullableWithAggregatesFilter<"CreditLedger"> | Date | string | null
@@ -290,7 +290,7 @@ export type CreditLedgerScalarWhereWithAggregatesInput = {
 
 export type CreditLedgerCreateInput = {
   id?: string
-  amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount: number
   type: string
   description?: string | null
   expiresAt?: Date | string | null
@@ -301,7 +301,7 @@ export type CreditLedgerCreateInput = {
 export type CreditLedgerUncheckedCreateInput = {
   id?: string
   userId: string
-  amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount: number
   type: string
   description?: string | null
   expiresAt?: Date | string | null
@@ -310,7 +310,7 @@ export type CreditLedgerUncheckedCreateInput = {
 
 export type CreditLedgerUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount?: Prisma.FloatFieldUpdateOperationsInput | number
   type?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -321,7 +321,7 @@ export type CreditLedgerUpdateInput = {
 export type CreditLedgerUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount?: Prisma.FloatFieldUpdateOperationsInput | number
   type?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -331,7 +331,7 @@ export type CreditLedgerUncheckedUpdateInput = {
 export type CreditLedgerCreateManyInput = {
   id?: string
   userId: string
-  amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount: number
   type: string
   description?: string | null
   expiresAt?: Date | string | null
@@ -340,7 +340,7 @@ export type CreditLedgerCreateManyInput = {
 
 export type CreditLedgerUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount?: Prisma.FloatFieldUpdateOperationsInput | number
   type?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -350,7 +350,7 @@ export type CreditLedgerUpdateManyMutationInput = {
 export type CreditLedgerUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount?: Prisma.FloatFieldUpdateOperationsInput | number
   type?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -449,7 +449,7 @@ export type CreditLedgerUncheckedUpdateManyWithoutUserNestedInput = {
 
 export type CreditLedgerCreateWithoutUserInput = {
   id?: string
-  amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount: number
   type: string
   description?: string | null
   expiresAt?: Date | string | null
@@ -458,7 +458,7 @@ export type CreditLedgerCreateWithoutUserInput = {
 
 export type CreditLedgerUncheckedCreateWithoutUserInput = {
   id?: string
-  amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount: number
   type: string
   description?: string | null
   expiresAt?: Date | string | null
@@ -472,7 +472,6 @@ export type CreditLedgerCreateOrConnectWithoutUserInput = {
 
 export type CreditLedgerCreateManyUserInputEnvelope = {
   data: Prisma.CreditLedgerCreateManyUserInput | Prisma.CreditLedgerCreateManyUserInput[]
-  skipDuplicates?: boolean
 }
 
 export type CreditLedgerUpsertWithWhereUniqueWithoutUserInput = {
@@ -497,7 +496,7 @@ export type CreditLedgerScalarWhereInput = {
   NOT?: Prisma.CreditLedgerScalarWhereInput | Prisma.CreditLedgerScalarWhereInput[]
   id?: Prisma.StringFilter<"CreditLedger"> | string
   userId?: Prisma.StringFilter<"CreditLedger"> | string
-  amount?: Prisma.DecimalFilter<"CreditLedger"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount?: Prisma.FloatFilter<"CreditLedger"> | number
   type?: Prisma.StringFilter<"CreditLedger"> | string
   description?: Prisma.StringNullableFilter<"CreditLedger"> | string | null
   expiresAt?: Prisma.DateTimeNullableFilter<"CreditLedger"> | Date | string | null
@@ -506,7 +505,7 @@ export type CreditLedgerScalarWhereInput = {
 
 export type CreditLedgerCreateManyUserInput = {
   id?: string
-  amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount: number
   type: string
   description?: string | null
   expiresAt?: Date | string | null
@@ -515,7 +514,7 @@ export type CreditLedgerCreateManyUserInput = {
 
 export type CreditLedgerUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount?: Prisma.FloatFieldUpdateOperationsInput | number
   type?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -524,7 +523,7 @@ export type CreditLedgerUpdateWithoutUserInput = {
 
 export type CreditLedgerUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount?: Prisma.FloatFieldUpdateOperationsInput | number
   type?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -533,7 +532,7 @@ export type CreditLedgerUncheckedUpdateWithoutUserInput = {
 
 export type CreditLedgerUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount?: Prisma.FloatFieldUpdateOperationsInput | number
   type?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -604,7 +603,7 @@ export type $CreditLedgerPayload<ExtArgs extends runtime.Types.Extensions.Intern
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     userId: string
-    amount: runtime.Decimal
+    amount: number
     type: string
     description: string | null
     expiresAt: Date | null
@@ -1035,7 +1034,7 @@ export interface Prisma__CreditLedgerClient<T, Null = never, ExtArgs extends run
 export interface CreditLedgerFieldRefs {
   readonly id: Prisma.FieldRef<"CreditLedger", 'String'>
   readonly userId: Prisma.FieldRef<"CreditLedger", 'String'>
-  readonly amount: Prisma.FieldRef<"CreditLedger", 'Decimal'>
+  readonly amount: Prisma.FieldRef<"CreditLedger", 'Float'>
   readonly type: Prisma.FieldRef<"CreditLedger", 'String'>
   readonly description: Prisma.FieldRef<"CreditLedger", 'String'>
   readonly expiresAt: Prisma.FieldRef<"CreditLedger", 'DateTime'>
@@ -1274,7 +1273,6 @@ export type CreditLedgerCreateManyArgs<ExtArgs extends runtime.Types.Extensions.
    * The data used to create many CreditLedgers.
    */
   data: Prisma.CreditLedgerCreateManyInput | Prisma.CreditLedgerCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
@@ -1293,7 +1291,6 @@ export type CreditLedgerCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Ex
    * The data used to create many CreditLedgers.
    */
   data: Prisma.CreditLedgerCreateManyInput | Prisma.CreditLedgerCreateManyInput[]
-  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

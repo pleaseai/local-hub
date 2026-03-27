@@ -660,7 +660,6 @@ export type AiCallLogCreateOrConnectWithoutUserInput = {
 
 export type AiCallLogCreateManyUserInputEnvelope = {
   data: Prisma.AiCallLogCreateManyUserInput | Prisma.AiCallLogCreateManyUserInput[]
-  skipDuplicates?: boolean
 }
 
 export type AiCallLogUpsertWithWhereUniqueWithoutUserInput = {
@@ -1611,7 +1610,6 @@ export type AiCallLogCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Int
    * The data used to create many AiCallLogs.
    */
   data: Prisma.AiCallLogCreateManyInput | Prisma.AiCallLogCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
@@ -1630,7 +1628,6 @@ export type AiCallLogCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Exten
    * The data used to create many AiCallLogs.
    */
   data: Prisma.AiCallLogCreateManyInput | Prisma.AiCallLogCreateManyInput[]
-  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

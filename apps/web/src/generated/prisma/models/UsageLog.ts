@@ -27,14 +27,14 @@ export type AggregateUsageLog = {
 }
 
 export type UsageLogAvgAggregateOutputType = {
-  costUsd: runtime.Decimal | null
-  creditUsed: runtime.Decimal | null
+  costUsd: number | null
+  creditUsed: number | null
   aiCallLogId: number | null
 }
 
 export type UsageLogSumAggregateOutputType = {
-  costUsd: runtime.Decimal | null
-  creditUsed: runtime.Decimal | null
+  costUsd: number | null
+  creditUsed: number | null
   aiCallLogId: number | null
 }
 
@@ -42,8 +42,8 @@ export type UsageLogMinAggregateOutputType = {
   id: string | null
   userId: string | null
   taskType: string | null
-  costUsd: runtime.Decimal | null
-  creditUsed: runtime.Decimal | null
+  costUsd: number | null
+  creditUsed: number | null
   aiCallLogId: number | null
   stripeReported: boolean | null
   createdAt: Date | null
@@ -53,8 +53,8 @@ export type UsageLogMaxAggregateOutputType = {
   id: string | null
   userId: string | null
   taskType: string | null
-  costUsd: runtime.Decimal | null
-  creditUsed: runtime.Decimal | null
+  costUsd: number | null
+  creditUsed: number | null
   aiCallLogId: number | null
   stripeReported: boolean | null
   createdAt: Date | null
@@ -209,8 +209,8 @@ export type UsageLogGroupByOutputType = {
   id: string
   userId: string
   taskType: string
-  costUsd: runtime.Decimal
-  creditUsed: runtime.Decimal
+  costUsd: number
+  creditUsed: number
   aiCallLogId: number | null
   stripeReported: boolean
   createdAt: Date
@@ -243,8 +243,8 @@ export type UsageLogWhereInput = {
   id?: Prisma.StringFilter<"UsageLog"> | string
   userId?: Prisma.StringFilter<"UsageLog"> | string
   taskType?: Prisma.StringFilter<"UsageLog"> | string
-  costUsd?: Prisma.DecimalFilter<"UsageLog"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  creditUsed?: Prisma.DecimalFilter<"UsageLog"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  costUsd?: Prisma.FloatFilter<"UsageLog"> | number
+  creditUsed?: Prisma.FloatFilter<"UsageLog"> | number
   aiCallLogId?: Prisma.IntNullableFilter<"UsageLog"> | number | null
   stripeReported?: Prisma.BoolFilter<"UsageLog"> | boolean
   createdAt?: Prisma.DateTimeFilter<"UsageLog"> | Date | string
@@ -273,8 +273,8 @@ export type UsageLogWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.UsageLogWhereInput | Prisma.UsageLogWhereInput[]
   userId?: Prisma.StringFilter<"UsageLog"> | string
   taskType?: Prisma.StringFilter<"UsageLog"> | string
-  costUsd?: Prisma.DecimalFilter<"UsageLog"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  creditUsed?: Prisma.DecimalFilter<"UsageLog"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  costUsd?: Prisma.FloatFilter<"UsageLog"> | number
+  creditUsed?: Prisma.FloatFilter<"UsageLog"> | number
   stripeReported?: Prisma.BoolFilter<"UsageLog"> | boolean
   createdAt?: Prisma.DateTimeFilter<"UsageLog"> | Date | string
   aiCallLog?: Prisma.XOR<Prisma.AiCallLogNullableScalarRelationFilter, Prisma.AiCallLogWhereInput> | null
@@ -304,8 +304,8 @@ export type UsageLogScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"UsageLog"> | string
   userId?: Prisma.StringWithAggregatesFilter<"UsageLog"> | string
   taskType?: Prisma.StringWithAggregatesFilter<"UsageLog"> | string
-  costUsd?: Prisma.DecimalWithAggregatesFilter<"UsageLog"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  creditUsed?: Prisma.DecimalWithAggregatesFilter<"UsageLog"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  costUsd?: Prisma.FloatWithAggregatesFilter<"UsageLog"> | number
+  creditUsed?: Prisma.FloatWithAggregatesFilter<"UsageLog"> | number
   aiCallLogId?: Prisma.IntNullableWithAggregatesFilter<"UsageLog"> | number | null
   stripeReported?: Prisma.BoolWithAggregatesFilter<"UsageLog"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"UsageLog"> | Date | string
@@ -314,8 +314,8 @@ export type UsageLogScalarWhereWithAggregatesInput = {
 export type UsageLogCreateInput = {
   id?: string
   taskType: string
-  costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  creditUsed?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  costUsd?: number
+  creditUsed?: number
   stripeReported?: boolean
   createdAt?: Date | string
   aiCallLog?: Prisma.AiCallLogCreateNestedOneWithoutUsageLogInput
@@ -326,8 +326,8 @@ export type UsageLogUncheckedCreateInput = {
   id?: string
   userId: string
   taskType: string
-  costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  creditUsed?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  costUsd?: number
+  creditUsed?: number
   aiCallLogId?: number | null
   stripeReported?: boolean
   createdAt?: Date | string
@@ -336,8 +336,8 @@ export type UsageLogUncheckedCreateInput = {
 export type UsageLogUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   taskType?: Prisma.StringFieldUpdateOperationsInput | string
-  costUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  creditUsed?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  costUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  creditUsed?: Prisma.FloatFieldUpdateOperationsInput | number
   stripeReported?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   aiCallLog?: Prisma.AiCallLogUpdateOneWithoutUsageLogNestedInput
@@ -348,8 +348,8 @@ export type UsageLogUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   taskType?: Prisma.StringFieldUpdateOperationsInput | string
-  costUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  creditUsed?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  costUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  creditUsed?: Prisma.FloatFieldUpdateOperationsInput | number
   aiCallLogId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   stripeReported?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -359,8 +359,8 @@ export type UsageLogCreateManyInput = {
   id?: string
   userId: string
   taskType: string
-  costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  creditUsed?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  costUsd?: number
+  creditUsed?: number
   aiCallLogId?: number | null
   stripeReported?: boolean
   createdAt?: Date | string
@@ -369,8 +369,8 @@ export type UsageLogCreateManyInput = {
 export type UsageLogUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   taskType?: Prisma.StringFieldUpdateOperationsInput | string
-  costUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  creditUsed?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  costUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  creditUsed?: Prisma.FloatFieldUpdateOperationsInput | number
   stripeReported?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -379,8 +379,8 @@ export type UsageLogUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   taskType?: Prisma.StringFieldUpdateOperationsInput | string
-  costUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  creditUsed?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  costUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  creditUsed?: Prisma.FloatFieldUpdateOperationsInput | number
   aiCallLogId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   stripeReported?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -488,12 +488,12 @@ export type UsageLogUncheckedUpdateManyWithoutUserNestedInput = {
   deleteMany?: Prisma.UsageLogScalarWhereInput | Prisma.UsageLogScalarWhereInput[]
 }
 
-export type DecimalFieldUpdateOperationsInput = {
-  set?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  increment?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  decrement?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  multiply?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  divide?: runtime.Decimal | runtime.DecimalJsLike | number | string
+export type FloatFieldUpdateOperationsInput = {
+  set?: number
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
 }
 
 export type UsageLogCreateNestedOneWithoutAiCallLogInput = {
@@ -531,8 +531,8 @@ export type UsageLogUncheckedUpdateOneWithoutAiCallLogNestedInput = {
 export type UsageLogCreateWithoutUserInput = {
   id?: string
   taskType: string
-  costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  creditUsed?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  costUsd?: number
+  creditUsed?: number
   stripeReported?: boolean
   createdAt?: Date | string
   aiCallLog?: Prisma.AiCallLogCreateNestedOneWithoutUsageLogInput
@@ -541,8 +541,8 @@ export type UsageLogCreateWithoutUserInput = {
 export type UsageLogUncheckedCreateWithoutUserInput = {
   id?: string
   taskType: string
-  costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  creditUsed?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  costUsd?: number
+  creditUsed?: number
   aiCallLogId?: number | null
   stripeReported?: boolean
   createdAt?: Date | string
@@ -555,7 +555,6 @@ export type UsageLogCreateOrConnectWithoutUserInput = {
 
 export type UsageLogCreateManyUserInputEnvelope = {
   data: Prisma.UsageLogCreateManyUserInput | Prisma.UsageLogCreateManyUserInput[]
-  skipDuplicates?: boolean
 }
 
 export type UsageLogUpsertWithWhereUniqueWithoutUserInput = {
@@ -581,8 +580,8 @@ export type UsageLogScalarWhereInput = {
   id?: Prisma.StringFilter<"UsageLog"> | string
   userId?: Prisma.StringFilter<"UsageLog"> | string
   taskType?: Prisma.StringFilter<"UsageLog"> | string
-  costUsd?: Prisma.DecimalFilter<"UsageLog"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  creditUsed?: Prisma.DecimalFilter<"UsageLog"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  costUsd?: Prisma.FloatFilter<"UsageLog"> | number
+  creditUsed?: Prisma.FloatFilter<"UsageLog"> | number
   aiCallLogId?: Prisma.IntNullableFilter<"UsageLog"> | number | null
   stripeReported?: Prisma.BoolFilter<"UsageLog"> | boolean
   createdAt?: Prisma.DateTimeFilter<"UsageLog"> | Date | string
@@ -591,8 +590,8 @@ export type UsageLogScalarWhereInput = {
 export type UsageLogCreateWithoutAiCallLogInput = {
   id?: string
   taskType: string
-  costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  creditUsed?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  costUsd?: number
+  creditUsed?: number
   stripeReported?: boolean
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutUsageLogsInput
@@ -602,8 +601,8 @@ export type UsageLogUncheckedCreateWithoutAiCallLogInput = {
   id?: string
   userId: string
   taskType: string
-  costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  creditUsed?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  costUsd?: number
+  creditUsed?: number
   stripeReported?: boolean
   createdAt?: Date | string
 }
@@ -627,8 +626,8 @@ export type UsageLogUpdateToOneWithWhereWithoutAiCallLogInput = {
 export type UsageLogUpdateWithoutAiCallLogInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   taskType?: Prisma.StringFieldUpdateOperationsInput | string
-  costUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  creditUsed?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  costUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  creditUsed?: Prisma.FloatFieldUpdateOperationsInput | number
   stripeReported?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutUsageLogsNestedInput
@@ -638,8 +637,8 @@ export type UsageLogUncheckedUpdateWithoutAiCallLogInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   taskType?: Prisma.StringFieldUpdateOperationsInput | string
-  costUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  creditUsed?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  costUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  creditUsed?: Prisma.FloatFieldUpdateOperationsInput | number
   stripeReported?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -647,8 +646,8 @@ export type UsageLogUncheckedUpdateWithoutAiCallLogInput = {
 export type UsageLogCreateManyUserInput = {
   id?: string
   taskType: string
-  costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  creditUsed?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  costUsd?: number
+  creditUsed?: number
   aiCallLogId?: number | null
   stripeReported?: boolean
   createdAt?: Date | string
@@ -657,8 +656,8 @@ export type UsageLogCreateManyUserInput = {
 export type UsageLogUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   taskType?: Prisma.StringFieldUpdateOperationsInput | string
-  costUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  creditUsed?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  costUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  creditUsed?: Prisma.FloatFieldUpdateOperationsInput | number
   stripeReported?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   aiCallLog?: Prisma.AiCallLogUpdateOneWithoutUsageLogNestedInput
@@ -667,8 +666,8 @@ export type UsageLogUpdateWithoutUserInput = {
 export type UsageLogUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   taskType?: Prisma.StringFieldUpdateOperationsInput | string
-  costUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  creditUsed?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  costUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  creditUsed?: Prisma.FloatFieldUpdateOperationsInput | number
   aiCallLogId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   stripeReported?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -677,8 +676,8 @@ export type UsageLogUncheckedUpdateWithoutUserInput = {
 export type UsageLogUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   taskType?: Prisma.StringFieldUpdateOperationsInput | string
-  costUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  creditUsed?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  costUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  creditUsed?: Prisma.FloatFieldUpdateOperationsInput | number
   aiCallLogId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   stripeReported?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -760,8 +759,8 @@ export type $UsageLogPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     id: string
     userId: string
     taskType: string
-    costUsd: runtime.Decimal
-    creditUsed: runtime.Decimal
+    costUsd: number
+    creditUsed: number
     aiCallLogId: number | null
     stripeReported: boolean
     createdAt: Date
@@ -1193,8 +1192,8 @@ export interface UsageLogFieldRefs {
   readonly id: Prisma.FieldRef<"UsageLog", 'String'>
   readonly userId: Prisma.FieldRef<"UsageLog", 'String'>
   readonly taskType: Prisma.FieldRef<"UsageLog", 'String'>
-  readonly costUsd: Prisma.FieldRef<"UsageLog", 'Decimal'>
-  readonly creditUsed: Prisma.FieldRef<"UsageLog", 'Decimal'>
+  readonly costUsd: Prisma.FieldRef<"UsageLog", 'Float'>
+  readonly creditUsed: Prisma.FieldRef<"UsageLog", 'Float'>
   readonly aiCallLogId: Prisma.FieldRef<"UsageLog", 'Int'>
   readonly stripeReported: Prisma.FieldRef<"UsageLog", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"UsageLog", 'DateTime'>
@@ -1432,7 +1431,6 @@ export type UsageLogCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * The data used to create many UsageLogs.
    */
   data: Prisma.UsageLogCreateManyInput | Prisma.UsageLogCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
@@ -1451,7 +1449,6 @@ export type UsageLogCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extens
    * The data used to create many UsageLogs.
    */
   data: Prisma.UsageLogCreateManyInput | Prisma.UsageLogCreateManyInput[]
-  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

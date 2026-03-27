@@ -1720,7 +1720,6 @@ export type CustomThemeCreateManyArgs<ExtArgs extends runtime.Types.Extensions.I
    * The data used to create many CustomThemes.
    */
   data: Prisma.CustomThemeCreateManyInput | Prisma.CustomThemeCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
@@ -1739,7 +1738,6 @@ export type CustomThemeCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Ext
    * The data used to create many CustomThemes.
    */
   data: Prisma.CustomThemeCreateManyInput | Prisma.CustomThemeCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**

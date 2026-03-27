@@ -1240,7 +1240,6 @@ export type PromptRequestCreateManyArgs<ExtArgs extends runtime.Types.Extensions
    * The data used to create many PromptRequests.
    */
   data: Prisma.PromptRequestCreateManyInput | Prisma.PromptRequestCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
@@ -1259,7 +1258,6 @@ export type PromptRequestCreateManyAndReturnArgs<ExtArgs extends runtime.Types.E
    * The data used to create many PromptRequests.
    */
   data: Prisma.PromptRequestCreateManyInput | Prisma.PromptRequestCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**

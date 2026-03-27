@@ -1080,7 +1080,6 @@ export type PinnedItemCreateManyArgs<ExtArgs extends runtime.Types.Extensions.In
    * The data used to create many PinnedItems.
    */
   data: Prisma.PinnedItemCreateManyInput | Prisma.PinnedItemCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
@@ -1099,7 +1098,6 @@ export type PinnedItemCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Exte
    * The data used to create many PinnedItems.
    */
   data: Prisma.PinnedItemCreateManyInput | Prisma.PinnedItemCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**

@@ -27,23 +27,23 @@ export type AggregateSpendingLimit = {
 }
 
 export type SpendingLimitAvgAggregateOutputType = {
-  monthlyCapUsd: runtime.Decimal | null
+  monthlyCapUsd: number | null
 }
 
 export type SpendingLimitSumAggregateOutputType = {
-  monthlyCapUsd: runtime.Decimal | null
+  monthlyCapUsd: number | null
 }
 
 export type SpendingLimitMinAggregateOutputType = {
   userId: string | null
-  monthlyCapUsd: runtime.Decimal | null
+  monthlyCapUsd: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
 
 export type SpendingLimitMaxAggregateOutputType = {
   userId: string | null
-  monthlyCapUsd: runtime.Decimal | null
+  monthlyCapUsd: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -175,7 +175,7 @@ export type SpendingLimitGroupByArgs<ExtArgs extends runtime.Types.Extensions.In
 
 export type SpendingLimitGroupByOutputType = {
   userId: string
-  monthlyCapUsd: runtime.Decimal
+  monthlyCapUsd: number
   createdAt: Date
   updatedAt: Date
   _count: SpendingLimitCountAggregateOutputType | null
@@ -205,7 +205,7 @@ export type SpendingLimitWhereInput = {
   OR?: Prisma.SpendingLimitWhereInput[]
   NOT?: Prisma.SpendingLimitWhereInput | Prisma.SpendingLimitWhereInput[]
   userId?: Prisma.StringFilter<"SpendingLimit"> | string
-  monthlyCapUsd?: Prisma.DecimalFilter<"SpendingLimit"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  monthlyCapUsd?: Prisma.FloatFilter<"SpendingLimit"> | number
   createdAt?: Prisma.DateTimeFilter<"SpendingLimit"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"SpendingLimit"> | Date | string
 }
@@ -222,7 +222,7 @@ export type SpendingLimitWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.SpendingLimitWhereInput | Prisma.SpendingLimitWhereInput[]
   OR?: Prisma.SpendingLimitWhereInput[]
   NOT?: Prisma.SpendingLimitWhereInput | Prisma.SpendingLimitWhereInput[]
-  monthlyCapUsd?: Prisma.DecimalFilter<"SpendingLimit"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  monthlyCapUsd?: Prisma.FloatFilter<"SpendingLimit"> | number
   createdAt?: Prisma.DateTimeFilter<"SpendingLimit"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"SpendingLimit"> | Date | string
 }, "userId">
@@ -244,56 +244,56 @@ export type SpendingLimitScalarWhereWithAggregatesInput = {
   OR?: Prisma.SpendingLimitScalarWhereWithAggregatesInput[]
   NOT?: Prisma.SpendingLimitScalarWhereWithAggregatesInput | Prisma.SpendingLimitScalarWhereWithAggregatesInput[]
   userId?: Prisma.StringWithAggregatesFilter<"SpendingLimit"> | string
-  monthlyCapUsd?: Prisma.DecimalWithAggregatesFilter<"SpendingLimit"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  monthlyCapUsd?: Prisma.FloatWithAggregatesFilter<"SpendingLimit"> | number
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"SpendingLimit"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"SpendingLimit"> | Date | string
 }
 
 export type SpendingLimitCreateInput = {
   userId: string
-  monthlyCapUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  monthlyCapUsd?: number
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type SpendingLimitUncheckedCreateInput = {
   userId: string
-  monthlyCapUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  monthlyCapUsd?: number
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type SpendingLimitUpdateInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  monthlyCapUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  monthlyCapUsd?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type SpendingLimitUncheckedUpdateInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  monthlyCapUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  monthlyCapUsd?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type SpendingLimitCreateManyInput = {
   userId: string
-  monthlyCapUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  monthlyCapUsd?: number
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type SpendingLimitUpdateManyMutationInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  monthlyCapUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  monthlyCapUsd?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type SpendingLimitUncheckedUpdateManyInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  monthlyCapUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  monthlyCapUsd?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -364,7 +364,7 @@ export type $SpendingLimitPayload<ExtArgs extends runtime.Types.Extensions.Inter
   objects: {}
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     userId: string
-    monthlyCapUsd: runtime.Decimal
+    monthlyCapUsd: number
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["spendingLimit"]>
@@ -791,7 +791,7 @@ export interface Prisma__SpendingLimitClient<T, Null = never, ExtArgs extends ru
  */
 export interface SpendingLimitFieldRefs {
   readonly userId: Prisma.FieldRef<"SpendingLimit", 'String'>
-  readonly monthlyCapUsd: Prisma.FieldRef<"SpendingLimit", 'Decimal'>
+  readonly monthlyCapUsd: Prisma.FieldRef<"SpendingLimit", 'Float'>
   readonly createdAt: Prisma.FieldRef<"SpendingLimit", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"SpendingLimit", 'DateTime'>
 }
@@ -1004,7 +1004,6 @@ export type SpendingLimitCreateManyArgs<ExtArgs extends runtime.Types.Extensions
    * The data used to create many SpendingLimits.
    */
   data: Prisma.SpendingLimitCreateManyInput | Prisma.SpendingLimitCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
@@ -1023,7 +1022,6 @@ export type SpendingLimitCreateManyAndReturnArgs<ExtArgs extends runtime.Types.E
    * The data used to create many SpendingLimits.
    */
   data: Prisma.SpendingLimitCreateManyInput | Prisma.SpendingLimitCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**

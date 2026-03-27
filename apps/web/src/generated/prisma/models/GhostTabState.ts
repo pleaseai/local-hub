@@ -976,7 +976,6 @@ export type GhostTabStateCreateManyArgs<ExtArgs extends runtime.Types.Extensions
    * The data used to create many GhostTabStates.
    */
   data: Prisma.GhostTabStateCreateManyInput | Prisma.GhostTabStateCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
@@ -995,7 +994,6 @@ export type GhostTabStateCreateManyAndReturnArgs<ExtArgs extends runtime.Types.E
    * The data used to create many GhostTabStates.
    */
   data: Prisma.GhostTabStateCreateManyInput | Prisma.GhostTabStateCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**

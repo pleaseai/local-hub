@@ -1284,7 +1284,6 @@ export type SearchEmbeddingCreateManyArgs<ExtArgs extends runtime.Types.Extensio
    * The data used to create many SearchEmbeddings.
    */
   data: Prisma.SearchEmbeddingCreateManyInput | Prisma.SearchEmbeddingCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
@@ -1303,7 +1302,6 @@ export type SearchEmbeddingCreateManyAndReturnArgs<ExtArgs extends runtime.Types
    * The data used to create many SearchEmbeddings.
    */
   data: Prisma.SearchEmbeddingCreateManyInput | Prisma.SearchEmbeddingCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**

@@ -338,7 +338,6 @@ export type UserThemeInstallCreateOrConnectWithoutCustomThemeInput = {
 
 export type UserThemeInstallCreateManyCustomThemeInputEnvelope = {
   data: Prisma.UserThemeInstallCreateManyCustomThemeInput | Prisma.UserThemeInstallCreateManyCustomThemeInput[]
-  skipDuplicates?: boolean
 }
 
 export type UserThemeInstallUpsertWithWhereUniqueWithoutCustomThemeInput = {
@@ -1096,7 +1095,6 @@ export type UserThemeInstallCreateManyArgs<ExtArgs extends runtime.Types.Extensi
    * The data used to create many UserThemeInstalls.
    */
   data: Prisma.UserThemeInstallCreateManyInput | Prisma.UserThemeInstallCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
@@ -1115,7 +1113,6 @@ export type UserThemeInstallCreateManyAndReturnArgs<ExtArgs extends runtime.Type
    * The data used to create many UserThemeInstalls.
    */
   data: Prisma.UserThemeInstallCreateManyInput | Prisma.UserThemeInstallCreateManyInput[]
-  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

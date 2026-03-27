@@ -1022,7 +1022,6 @@ export type GithubCacheEntryCreateManyArgs<ExtArgs extends runtime.Types.Extensi
    * The data used to create many GithubCacheEntries.
    */
   data: Prisma.GithubCacheEntryCreateManyInput | Prisma.GithubCacheEntryCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
@@ -1041,7 +1040,6 @@ export type GithubCacheEntryCreateManyAndReturnArgs<ExtArgs extends runtime.Type
    * The data used to create many GithubCacheEntries.
    */
   data: Prisma.GithubCacheEntryCreateManyInput | Prisma.GithubCacheEntryCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**

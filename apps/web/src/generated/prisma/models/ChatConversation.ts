@@ -1228,7 +1228,6 @@ export type ChatConversationCreateManyArgs<ExtArgs extends runtime.Types.Extensi
    * The data used to create many ChatConversations.
    */
   data: Prisma.ChatConversationCreateManyInput | Prisma.ChatConversationCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
@@ -1247,7 +1246,6 @@ export type ChatConversationCreateManyAndReturnArgs<ExtArgs extends runtime.Type
    * The data used to create many ChatConversations.
    */
   data: Prisma.ChatConversationCreateManyInput | Prisma.ChatConversationCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**

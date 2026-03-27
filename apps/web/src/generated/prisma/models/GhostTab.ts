@@ -1010,7 +1010,6 @@ export type GhostTabCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * The data used to create many GhostTabs.
    */
   data: Prisma.GhostTabCreateManyInput | Prisma.GhostTabCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
@@ -1029,7 +1028,6 @@ export type GhostTabCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extens
    * The data used to create many GhostTabs.
    */
   data: Prisma.GhostTabCreateManyInput | Prisma.GhostTabCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**

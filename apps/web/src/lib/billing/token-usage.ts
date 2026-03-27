@@ -3,8 +3,8 @@ import { prisma } from "../db";
 
 function buildUsageDetails(usage: LanguageModelUsage) {
 	return {
-		input: usage.promptTokens ?? 0,
-		output: usage.completionTokens ?? 0,
+		input: usage.inputTokens ?? 0,
+		output: usage.outputTokens ?? 0,
 		total: usage.totalTokens ?? 0,
 	};
 }
