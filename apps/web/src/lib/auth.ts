@@ -31,7 +31,7 @@ async function getOctokitUser(token: string) {
 export const auth = betterAuth({
 	appName: "Better Hub",
 	database: prismaAdapter(prisma, {
-		provider: "postgresql",
+		provider: "sqlite",
 	}),
 	experimental: {
 		joins: true,

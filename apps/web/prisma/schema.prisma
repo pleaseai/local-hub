@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 model User {
@@ -266,8 +266,8 @@ model UsageLog {
   id              String   @id @default(cuid())
   userId          String
   taskType        String
-  costUsd         Decimal  @default(0) @db.Decimal(10, 6)
-  creditUsed      Decimal  @default(0) @db.Decimal(10, 6)
+  costUsd         Float    @default(0)
+  creditUsed      Float    @default(0)
   aiCallLogId     Int?     @unique
   stripeReported  Boolean  @default(false)
   createdAt       DateTime @default(now())
@@ -305,7 +305,7 @@ model AiCallLog {
 model CreditLedger {
   id          String    @id @default(cuid())
   userId      String
-  amount      Decimal   @db.Decimal(10, 6)
+  amount      Float
   type        String
   description String?
   expiresAt   DateTime?
@@ -319,7 +319,7 @@ model CreditLedger {
 
 model SpendingLimit {
   userId        String   @id
-  monthlyCapUsd Decimal  @db.Decimal(10, 2) @default(10.00)
+  monthlyCapUsd Float    @default(10.00)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

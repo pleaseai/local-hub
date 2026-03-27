@@ -1,3 +1,4 @@
+import path from "node:path";
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
@@ -9,6 +10,6 @@ export default defineConfig({
 	datasource: {
 		url:
 			process.env.DATABASE_URL ??
-			"postgresql://placeholder:placeholder@localhost:5432/placeholder",
+			`file:${path.resolve("prisma/dev.db")}`,
 	},
 });
