@@ -19,19 +19,30 @@ export function createAIProvider(
 			return createOpenRouter({ apiKey: options.apiKey });
 
 		case "claude-code": {
-			// Dynamic import to avoid requiring CLI providers when not used
-			const { createClaudeCode } = require("ai-sdk-provider-claude-code");
-			return createClaudeCode();
+			try {
+				const { createClaudeCode } = require("ai-sdk-provider-claude-code");
+				return createClaudeCode();
+			} catch {
+				throw new Error("Claude Code CLI provider is not available. Install 'ai-sdk-provider-claude-code' to use this provider.");
+			}
 		}
 
 		case "gemini-cli": {
-			const { createGeminiCli } = require("ai-sdk-provider-gemini-cli");
-			return createGeminiCli();
+			try {
+				const { createGeminiCli } = require("ai-sdk-provider-gemini-cli");
+				return createGeminiCli();
+			} catch {
+				throw new Error("Gemini CLI provider is not available. Install 'ai-sdk-provider-gemini-cli' to use this provider.");
+			}
 		}
 
 		case "codex-cli": {
-			const { createCodexCli } = require("ai-sdk-provider-codex-cli");
-			return createCodexCli();
+			try {
+				const { createCodexCli } = require("ai-sdk-provider-codex-cli");
+				return createCodexCli();
+			} catch {
+				throw new Error("Codex CLI provider is not available. Install 'ai-sdk-provider-codex-cli' to use this provider.");
+			}
 		}
 
 		default:
