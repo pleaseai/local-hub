@@ -1,0 +1,18 @@
+{
+  "name": "@pleaseai/local-hub",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "bun --watch src/cli.ts start",
+    "build": "bun build src/cli.ts --outdir dist --target bun",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "unstorage": "^1.15.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.13"
+  }
+}
