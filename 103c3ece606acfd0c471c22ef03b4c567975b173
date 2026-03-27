@@ -1,0 +1,25 @@
+.please/docs/tracks/active/local-better-hub-20260327/plan.md
+  2dda355bc365bd5a 158-183
+apps/web/package.json
+  2dda355bc365bd5a 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "103c3ece606acfd0c471c22ef03b4c567975b173",
+  "prompts": {
+    "2dda355bc365bd5a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "27f0e826-e433-41b1-a772-b7657a087989",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Minsu Lee <amond@amond.net>",
+      "messages": [],
+      "total_additions": 27,
+      "total_deletions": 1,
+      "accepted_lines": 27,
+      "overriden_lines": 0
+    }
+  }
+}
