@@ -1,41 +1,62 @@
-name: Release
-
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - main
 
 permissions:
   contents: write
+  pull-requests: write
+
+name: release
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  build-binaries:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
-          - target: x86_64-apple-darwin
-            os: macos-latest
+          - os: macos-latest
+            target: x86_64-apple-darwin
             artifact: local-hub-darwin-x64
-          - target: aarch64-apple-darwin
-            os: macos-latest
+          - os: macos-latest
+            target: aarch64-apple-darwin
             artifact: local-hub-darwin-arm64
-          - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
             artifact: local-hub-linux-x64
-          - target: aarch64-unknown-linux-gnu
-            os: ubuntu-latest
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
             artifact: local-hub-linux-arm64
 
-    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Rust toolchain
-        run: |
-          rustup target add ${{ matrix.target }}
+        run: rustup target add ${{ matrix.target }}
 
       - name: Install cross-compilation tools (Linux ARM64)
         if: matrix.target == 'aarch64-unknown-linux-gnu'
@@ -43,11 +64,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gcc-aarch64-linux-gnu
 
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.target }}-cargo-
+
       - name: Build
         env:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
-        run: |
-          cargo build --release --target ${{ matrix.target }} -p local-hub
+        run: cargo build --release --target ${{ matrix.target }} -p local-hub
 
       - name: Package
         run: |
@@ -62,30 +93,119 @@ jobs:
           name: ${{ matrix.artifact }}
           path: dist/${{ matrix.artifact }}.tar.gz*
 
-  release:
-    needs: build
+  upload-release-assets:
+    needs: [release-please, build-binaries]
+    if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
           merge-multiple: true
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: artifacts/*
-          generate_release_notes: true
+      - name: Upload release artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload ${{ needs.release-please.outputs.tag_name }} \
+            artifacts/* \
+            --clobber
 
-  homebrew:
-    needs: release
+  update-homebrew-formula:
+    needs: [release-please, upload-release-assets]
+    if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
     steps:
-      - name: Update Homebrew formula
-        uses: mislav/bump-homebrew-formula-action@v3
+      - uses: actions/create-github-app-token@v2
+        id: app-token
         with:
-          formula-name: local-hub
-          homebrew-tap: pleaseai/homebrew-tap
-          download-url: https://github.com/pleaseai/local-hub/releases/download/${{ github.ref_name }}/local-hub-darwin-arm64.tar.gz
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+          repositories: |
+            local-hub
+            homebrew-tap
+
+      - uses: actions/checkout@v4
+        with:
+          repository: pleaseai/homebrew-tap
+          token: ${{ steps.app-token.outputs.token }}
+          path: homebrew-tap
+
+      - name: Configure git
+        run: |
+          cd homebrew-tap
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Update Formula
+        run: |
+          VERSION=${{ needs.release-please.outputs.tag_name }}
+          VERSION_NO_V=${VERSION#v}
+
+          # Download checksums
+          for target in darwin-x64 darwin-arm64 linux-x64 linux-arm64; do
+            curl -L -o ${target}.sha256 \
+              "https://github.com/${{ github.repository }}/releases/download/${VERSION}/local-hub-${target}.tar.gz.sha256"
+          done
+
+          DARWIN_X64_SHA256=$(awk '{print $1}' darwin-x64.sha256)
+          DARWIN_ARM64_SHA256=$(awk '{print $1}' darwin-arm64.sha256)
+          LINUX_X64_SHA256=$(awk '{print $1}' linux-x64.sha256)
+          LINUX_ARM64_SHA256=$(awk '{print $1}' linux-arm64.sha256)
+
+          cd homebrew-tap
+          cat > local-hub.rb << 'FORMULA_EOF'
+          class LocalHub < Formula
+            desc "Local GitHub API cache proxy — reduce latency and save rate limits"
+            homepage "https://github.com/pleaseai/local-hub"
+            version "VERSION_PLACEHOLDER"
+            license "MIT"
+
+            on_macos do
+              if Hardware::CPU.arm?
+                url "https://github.com/pleaseai/local-hub/releases/download/vVERSION_PLACEHOLDER/local-hub-darwin-arm64.tar.gz"
+                sha256 "SHA256_DARWIN_ARM64_PLACEHOLDER"
+              else
+                url "https://github.com/pleaseai/local-hub/releases/download/vVERSION_PLACEHOLDER/local-hub-darwin-x64.tar.gz"
+                sha256 "SHA256_DARWIN_X64_PLACEHOLDER"
+              end
+            end
+
+            on_linux do
+              if Hardware::CPU.arm?
+                url "https://github.com/pleaseai/local-hub/releases/download/vVERSION_PLACEHOLDER/local-hub-linux-arm64.tar.gz"
+                sha256 "SHA256_LINUX_ARM64_PLACEHOLDER"
+              else
+                url "https://github.com/pleaseai/local-hub/releases/download/vVERSION_PLACEHOLDER/local-hub-linux-x64.tar.gz"
+                sha256 "SHA256_LINUX_X64_PLACEHOLDER"
+              end
+            end
+
+            def install
+              bin.install "local-hub"
+            end
+
+            test do
+              assert_match version.to_s, shell_output("#{bin}/local-hub --version")
+            end
+          end
+          FORMULA_EOF
+
+          sed -i "s/VERSION_PLACEHOLDER/${VERSION_NO_V}/g" local-hub.rb
+          sed -i "s/SHA256_DARWIN_X64_PLACEHOLDER/${DARWIN_X64_SHA256}/" local-hub.rb
+          sed -i "s/SHA256_DARWIN_ARM64_PLACEHOLDER/${DARWIN_ARM64_SHA256}/" local-hub.rb
+          sed -i "s/SHA256_LINUX_X64_PLACEHOLDER/${LINUX_X64_SHA256}/" local-hub.rb
+          sed -i "s/SHA256_LINUX_ARM64_PLACEHOLDER/${LINUX_ARM64_SHA256}/" local-hub.rb
+
+          if git diff --quiet local-hub.rb 2>/dev/null; then
+            echo "No changes to Formula"
+            exit 0
+          fi
+
+          git add local-hub.rb
+          git commit -m "chore: update local-hub to ${VERSION}"
+          git push origin main
         env:
-          COMMITTER_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
