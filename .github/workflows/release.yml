@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch: {}
 
 permissions:
   contents: write
@@ -141,13 +142,13 @@ jobs:
 
       - name: Update Formula
         run: |
-          VERSION=${{ needs.release-please.outputs.tag_name }}
-          VERSION_NO_V=${VERSION#v}
+          TAG_NAME=${{ needs.release-please.outputs.tag_name }}
+          VERSION_NO_V=${TAG_NAME#local-hub-v}
 
           # Download checksums
           for target in darwin-x64 darwin-arm64 linux-x64 linux-arm64; do
             curl -L -o ${target}.sha256 \
-              "https://github.com/${{ github.repository }}/releases/download/${VERSION}/local-hub-${target}.tar.gz.sha256"
+              "https://github.com/${{ github.repository }}/releases/download/${TAG_NAME}/local-hub-${target}.tar.gz.sha256"
           done
 
           DARWIN_X64_SHA256=$(awk '{print $1}' darwin-x64.sha256)
@@ -165,20 +166,20 @@ jobs:
 
             on_macos do
               if Hardware::CPU.arm?
-                url "https://github.com/pleaseai/local-hub/releases/download/vVERSION_PLACEHOLDER/local-hub-darwin-arm64.tar.gz"
+                url "https://github.com/pleaseai/local-hub/releases/download/TAG_NAME_PLACEHOLDER/local-hub-darwin-arm64.tar.gz"
                 sha256 "SHA256_DARWIN_ARM64_PLACEHOLDER"
               else
-                url "https://github.com/pleaseai/local-hub/releases/download/vVERSION_PLACEHOLDER/local-hub-darwin-x64.tar.gz"
+                url "https://github.com/pleaseai/local-hub/releases/download/TAG_NAME_PLACEHOLDER/local-hub-darwin-x64.tar.gz"
                 sha256 "SHA256_DARWIN_X64_PLACEHOLDER"
               end
             end
 
             on_linux do
               if Hardware::CPU.arm?
-                url "https://github.com/pleaseai/local-hub/releases/download/vVERSION_PLACEHOLDER/local-hub-linux-arm64.tar.gz"
+                url "https://github.com/pleaseai/local-hub/releases/download/TAG_NAME_PLACEHOLDER/local-hub-linux-arm64.tar.gz"
                 sha256 "SHA256_LINUX_ARM64_PLACEHOLDER"
               else
-                url "https://github.com/pleaseai/local-hub/releases/download/vVERSION_PLACEHOLDER/local-hub-linux-x64.tar.gz"
+                url "https://github.com/pleaseai/local-hub/releases/download/TAG_NAME_PLACEHOLDER/local-hub-linux-x64.tar.gz"
                 sha256 "SHA256_LINUX_X64_PLACEHOLDER"
               end
             end
@@ -194,6 +195,7 @@ jobs:
           FORMULA_EOF
 
           sed -i "s/VERSION_PLACEHOLDER/${VERSION_NO_V}/g" local-hub.rb
+          sed -i "s/TAG_NAME_PLACEHOLDER/${TAG_NAME}/g" local-hub.rb
           sed -i "s/SHA256_DARWIN_X64_PLACEHOLDER/${DARWIN_X64_SHA256}/" local-hub.rb
           sed -i "s/SHA256_DARWIN_ARM64_PLACEHOLDER/${DARWIN_ARM64_SHA256}/" local-hub.rb
           sed -i "s/SHA256_LINUX_X64_PLACEHOLDER/${LINUX_X64_SHA256}/" local-hub.rb
@@ -205,7 +207,7 @@ jobs:
           fi
 
           git add local-hub.rb
-          git commit -m "chore: update local-hub to ${VERSION}"
+          git commit -m "chore: update local-hub to ${TAG_NAME}"
           git push origin main
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}

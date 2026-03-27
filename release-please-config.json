@@ -3,7 +3,7 @@
     "crates/server": {
       "release-type": "rust",
       "package-name": "local-hub",
-      "include-component-in-tag": false,
+      "include-component-in-tag": true,
       "include-v-in-tag": true,
       "changelog-sections": [
         { "type": "feat", "section": "Features" },
