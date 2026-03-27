@@ -155,3 +155,33 @@ For DB migration, change Prisma provider to sqlite, remove pg.Pool/PrismaPg adap
 - Decision: Keep token usage logging when removing Stripe
   Rationale: AI usage monitoring is useful even without billing; only Stripe meter reporting removed
   Date/Author: 2026-03-27 / Claude
+
+## Outcomes & Retrospective
+
+### What Was Shipped
+
+- Local Better Hub dashboard (apps/web) — vendor/better-hub copy with local-hub proxy routing
+- Configurable GitHub API URL via GITHUB_API_URL / GITHUB_GRAPHQL_URL env vars (38 locations, 14 files)
+- SQLite database replacing PostgreSQL (Prisma schema + adapter migration)
+- Stripe billing fully removed (auth plugin, billing files, API routes, cron jobs, UI, dependencies)
+- CLI AI providers (Claude Code, Gemini CLI, Codex CLI) integrated in Ghost assistant
+
+### What Went Well
+
+- Central github-config.ts module cleanly consolidated all GitHub API URL references
+- Stripe removal was straightforward thanks to existing conditional loading (isStripeEnabled)
+- AI SDK provider factory pattern is extensible for future providers
+- TypeScript type checking passes after all modifications
+
+### What Could Improve
+
+- Pre-existing vendor issues (Redis cache key mismatch, shell injection in sandbox, empty error handlers) should be addressed
+- Prisma migration for SQLite needs testing (migration files are still PostgreSQL-formatted)
+- E2E testing with actual GitHub OAuth and local-hub proxy not yet performed
+
+### Tech Debt Created
+
+- Pre-existing Redis cache key mismatch in auth.ts (read uses raw token, write uses hash)
+- Pre-existing shell injection risk in E2B sandbox git config (commitAuthor)
+- PostgreSQL migration SQL files in prisma/migrations/ need regeneration for SQLite
+- billing-tab.tsx is a stub — could be removed entirely or repurposed for usage stats

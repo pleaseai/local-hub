@@ -1,5 +1,5 @@
 {
-  "name": "@better-hub/web",
+  "name": "@local-hub/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -23,9 +23,6 @@
     "@mixedbread-ai/sdk": "^2.2.11",
     "@octokit/rest": "^22.0.1",
     "@openrouter/ai-sdk-provider": "^2.2.3",
-    "ai-sdk-provider-claude-code": "*",
-    "ai-sdk-provider-gemini-cli": "*",
-    "ai-sdk-provider-codex-cli": "*",
     "@prisma/client": "^7.4.1",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -47,6 +44,9 @@
     "@vercel/analytics": "^1.6.1",
     "@vercel/functions": "^3.4.2",
     "ai": "^6.0.97",
+    "ai-sdk-provider-claude-code": "*",
+    "ai-sdk-provider-codex-cli": "*",
+    "ai-sdk-provider-gemini-cli": "*",
     "auth": "1.5.0-beta.18",
     "better-all": "^0.0.7",
     "better-auth": "1.5.1",
@@ -90,6 +90,7 @@
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "^1.0.0",
     "react-grab": "^0.1.25",
-    "tailwindcss": "^4"
+    "tailwindcss": "^4",
+    "typescript": "6.0.2"
   }
 }
