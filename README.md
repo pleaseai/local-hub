@@ -11,34 +11,37 @@ Local GitHub API cache proxy — reduce latency and save rate limits.
 - **Offline access** to previously fetched data
 
 ```
-gh CLI ──→ local-hub (localhost) ──→ GitHub API
-              │
-              └─ unstorage cache (fs)
+gh CLI ──(Unix socket)──→ local-hub ──(HTTPS)──→ GitHub API
+fetch  ──(HTTP :8787)───→  (cache)
 ```
 
 ## Features
 
-- **Transparent HTTP proxy** — set `GITHUB_API_URL` and everything just works
+- **Dual listen** — Unix socket for `gh` CLI + TCP port for `fetch`/`octokit`
 - **ETag + TTL caching** — conditional requests for freshness, TTL for speed
 - **Token-hash isolation** — each token gets its own cache namespace (no privilege leaks)
 - **All GET requests cached** — issues, PRs, repos, orgs, projects, and more
 - **Write passthrough** — POST/PUT/PATCH/DELETE go straight to GitHub with related cache invalidation
+- **Tiny footprint** — ~3-5MB memory, <2ms cold start (Rust native binary)
 - **Zero config** — sensible defaults, just start and go
 
 ## Quick start
 
 ```bash
 # Install
-bun add -g @pleaseai/local-hub
+cargo install --git https://github.com/pleaseai/local-hub
 
 # Start the proxy
 local-hub start
 
 # Configure gh CLI to use it
-export GITHUB_API_URL=http://localhost:8787
+gh config set http_unix_socket ~/.local-hub/local-hub.sock
 
 # Use gh as normal — requests are now cached
 gh issue list
+
+# For fetch/octokit clients, use HTTP endpoint
+# baseUrl: http://localhost:8787
 ```
 
 ## How it works
@@ -84,25 +87,29 @@ local-hub status
 ## Architecture
 
 ```
-src/
-├── cli.ts          # CLI entry point (start, stop, status, flush)
-├── server.ts       # Bun HTTP proxy server
-├── cache.ts        # unstorage cache layer (get, set, invalidate)
-├── key.ts          # Cache key generation (token hash + URL normalization)
-└── ttl.ts          # Per-endpoint TTL rules
+crates/
+└── server/
+    └── src/
+        ├── main.rs       # CLI entry point (start, stop, status, flush)
+        ├── server.rs      # axum HTTP proxy (TCP + Unix socket)
+        ├── cache.rs       # redb cache layer (get, set, invalidate)
+        ├── key.rs         # Cache key generation (token hash + URL normalization)
+        └── ttl.rs         # Per-endpoint TTL rules
 ```
 
 ### Tech stack
 
-- **Runtime**: [Bun](https://bun.sh) — fast startup, built-in HTTP server
-- **Cache**: [unstorage](https://unstorage.unjs.io) with fs driver — swappable storage backend
-- **Zero compile step** — TypeScript executed directly by Bun
+- **Language**: [Rust](https://www.rust-lang.org) — minimal memory, instant startup
+- **HTTP**: [axum](https://github.com/tokio-rs/axum) + [hyper](https://hyper.rs) — async HTTP server
+- **Cache**: [redb](https://github.com/cberner/redb) — embedded key-value store (single file, ACID)
+- **Tooling**: [mise](https://mise.jdx.dev) — version management
 
 ## Roadmap
 
 - [ ] **Phase 1**: Local proxy with TTL + ETag caching
 - [ ] **Phase 2**: Webhook-based cache invalidation (via relay-worker)
-- [ ] **Phase 3**: Team shared cache (Cloudflare Worker + D1 as L2)
+- [ ] **Phase 3**: Team shared cache (L2 layer)
+- [ ] **Phase 4**: Web client dashboard (via better-hub)
 
 ## License
 

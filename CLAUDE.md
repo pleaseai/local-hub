@@ -4,29 +4,46 @@ Local GitHub API cache proxy — reduce latency and save rate limits.
 
 ## Tech Stack
 
-- **Runtime**: Bun (packageManager: bun@1.3.10)
-- **Monorepo**: Turborepo + bun workspaces
-- **Cache**: unstorage (fs driver)
-- **Lint**: @antfu/eslint-config + husky + lint-staged + commitlint (conventional)
+- **Language**: Rust (stable)
+- **Async runtime**: tokio
+- **HTTP server**: axum + hyper (TCP + Unix socket dual listen)
+- **HTTP client**: reqwest (GitHub API forwarding)
+- **Cache storage**: redb (embedded key-value store)
+- **CLI**: clap
+- **Tooling**: mise (version management)
 
 ## Project Structure
 
 ```
-packages/
-  server/             # @pleaseai/local-hub — HTTP proxy server + CLI
+crates/
+  server/               # local-hub binary — HTTP proxy server + CLI
     src/
-      cli.ts          # CLI entry point (start, stop, status, flush)
-      server.ts       # Bun HTTP proxy server
-      cache.ts        # unstorage cache layer
-      key.ts          # Cache key generation (token hash + URL normalization)
-      ttl.ts          # Per-endpoint TTL rules
+      main.rs           # Entry point + CLI (start, stop, status, flush)
 ```
+
+## Monorepo
+
+Cargo workspace. 추후 web client crate 추가 예정.
 
 ## Development Commands
 
 ```bash
-bun install                    # Install dependencies
-bun run dev                    # Dev mode (turbo)
-bun run build                  # Build (turbo)
-bun run lint:fix               # Lint fix (turbo)
+mise install                   # Install toolchain
+cargo build                    # Build
+cargo run -- start             # Run server
+cargo test                     # Test
+cargo clippy                   # Lint
+cargo fmt                      # Format
 ```
+
+## Architecture
+
+```
+gh CLI ──(Unix socket)──→ local-hub ──(HTTPS)──→ GitHub API
+fetch  ──(HTTP :8787)───→  (cache)
+```
+
+- gh CLI: `http_unix_socket` config으로 연결
+- fetch/octokit: `http://localhost:8787` baseUrl로 연결
+- Cache key: `SHA256(token)[:16] + method + URL + query`
+- Invalidation: TTL + ETag conditional requests
