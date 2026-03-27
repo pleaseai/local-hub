@@ -1,0 +1,3 @@
+[submodule "vendor/better-hub"]
+	path = vendor/better-hub
+	url = https://github.com/better-auth/better-hub
