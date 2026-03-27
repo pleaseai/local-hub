@@ -1,0 +1,29 @@
+apps/web/src/components/settings/tabs/billing-tab.tsx
+  2dda355bc365bd5a 10,12-15
+apps/web/src/app/api/inngest/route.ts
+  2dda355bc365bd5a 2,6
+apps/web/src/lib/db.ts
+  2dda355bc365bd5a 1,4,6,9-11,14
+apps/web/src/lib/billing/token-usage.ts
+  2dda355bc365bd5a 6-7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "ab5948be0a957a9f8448856b903fccc983f0a125",
+  "prompts": {
+    "2dda355bc365bd5a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "27f0e826-e433-41b1-a772-b7657a087989",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Minsu Lee <amond@amond.net>",
+      "messages": [],
+      "total_additions": 17,
+      "total_deletions": 660,
+      "accepted_lines": 17,
+      "overriden_lines": 0
+    }
+  }
+}
