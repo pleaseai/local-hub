@@ -1,22 +1,10 @@
-#![allow(clippy::result_large_err)]
-
-mod cache;
-mod error;
-mod key;
-mod proxy;
-mod server;
-mod ttl;
-
 use std::path::PathBuf;
 use std::sync::Arc;
 
 use clap::{Parser, Subcommand};
+use local_hub::{CacheStore, TtlConfig, proxy, server};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
-
-use cache::CacheStore;
-use proxy::AppState;
-use ttl::TtlConfig;
 
 const DEFAULT_PORT: u16 = 8787;
 const DEFAULT_SOCKET: &str = ".local-hub/local-hub.sock";
@@ -49,6 +37,10 @@ enum Commands {
         /// Default TTL in seconds
         #[arg(short, long, default_value_t = DEFAULT_TTL, env = "LOCAL_HUB_TTL")]
         ttl: u64,
+
+        /// GitHub API base URL (for testing with emulate.dev)
+        #[arg(long, env = "LOCAL_HUB_GITHUB_URL")]
+        github_url: Option<String>,
     },
     /// Show cache statistics
     Status {
@@ -103,6 +95,7 @@ async fn main() -> anyhow::Result<()> {
             socket,
             cache_dir,
             ttl,
+            github_url,
         } => {
             let cache_path = cache_dir.unwrap_or_else(|| resolve_home_path(DEFAULT_CACHE_DIR));
             let socket_path = socket.unwrap_or_else(|| resolve_home_path(DEFAULT_SOCKET));
@@ -114,10 +107,14 @@ async fn main() -> anyhow::Result<()> {
                 .user_agent("local-hub/0.1")
                 .build()?;
 
-            let state = Arc::new(AppState {
+            let github_base_url =
+                github_url.unwrap_or_else(|| proxy::DEFAULT_GITHUB_API_BASE.to_string());
+
+            let state = Arc::new(proxy::AppState {
                 cache,
                 ttl_config,
                 client,
+                github_base_url,
             });
 
             info!(port, socket = %socket_path.display(), cache = %cache_path.display(), "starting local-hub");
@@ -126,7 +123,6 @@ async fn main() -> anyhow::Result<()> {
             let tcp_router = router.clone();
             let unix_router = router;
 
-            // Run both listeners concurrently
             tokio::try_join!(
                 server::serve_tcp(tcp_router, port),
                 server::serve_unix(unix_router, socket_path),
@@ -157,7 +153,6 @@ async fn main() -> anyhow::Result<()> {
                 }
                 None => {
                     let count = cache.count()?;
-                    // Remove all by iterating (redb doesn't have a clear method)
                     let removed = cache.remove_by_prefix("")?;
                     println!("Flushed {removed} entries (was {count})");
                 }

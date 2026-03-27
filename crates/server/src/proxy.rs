@@ -3,7 +3,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use axum::body::Body;
 use axum::extract::{Request, State};
-use axum::http::{HeaderMap, HeaderValue, StatusCode};
+use axum::http::{HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Response};
 use tracing::{debug, warn};
 
@@ -11,12 +11,22 @@ use crate::cache::{CacheEntry, CacheStore};
 use crate::key;
 use crate::ttl::TtlConfig;
 
-const GITHUB_API_BASE: &str = "https://api.github.com";
+pub const DEFAULT_GITHUB_API_BASE: &str = "https://api.github.com";
 
 pub struct AppState {
     pub cache: CacheStore,
     pub ttl_config: TtlConfig,
     pub client: reqwest::Client,
+    pub github_base_url: String,
+}
+
+impl AppState {
+    fn build_url(&self, path: &str, query: Option<&str>) -> String {
+        match query {
+            Some(q) if !q.is_empty() => format!("{}{path}?{q}", self.github_base_url),
+            _ => format!("{}{path}", self.github_base_url),
+        }
+    }
 }
 
 /// Main proxy handler. Intercepts all requests and applies caching logic.
@@ -30,24 +40,32 @@ pub async fn proxy_handler(State(state): State<Arc<AppState>>, req: Request) -> 
         .headers()
         .get("authorization")
         .and_then(|v| v.to_str().ok())
-        .map(|v| v.trim_start_matches("Bearer ").trim_start_matches("token "))
-        .unwrap_or("");
+        .map(|v| {
+            v.trim_start_matches("Bearer ")
+                .trim_start_matches("token ")
+                .to_string()
+        })
+        .unwrap_or_default();
 
     // Only cache GET requests
     if method != "GET" {
+        // Read body for forwarding
+        let body_bytes = axum::body::to_bytes(req.into_body(), 10 * 1024 * 1024)
+            .await
+            .unwrap_or_default();
         let response = forward_to_github(
             &state,
             method.as_ref(),
             &path,
             query.as_deref(),
-            req.headers(),
-            token,
+            &token,
+            Some(body_bytes),
         )
         .await;
         // Invalidate related cache on mutations
         if !token.is_empty() {
             if let Some(parent) = parent_path(&path) {
-                let prefix = key::invalidation_prefix(token, parent);
+                let prefix = key::invalidation_prefix(&token, parent);
                 if let Err(e) = state.cache.remove_by_prefix(&prefix) {
                     warn!(error = %e, prefix, "failed to invalidate cache");
                 }
@@ -56,7 +74,7 @@ pub async fn proxy_handler(State(state): State<Arc<AppState>>, req: Request) -> 
         return response;
     }
 
-    let cache_key = key::cache_key(token, "GET", &path, query.as_deref());
+    let cache_key = key::cache_key(&token, "GET", &path, query.as_deref());
     let ttl = state.ttl_config.resolve(&path);
 
     // Check cache
@@ -70,7 +88,7 @@ pub async fn proxy_handler(State(state): State<Arc<AppState>>, req: Request) -> 
             if let Some(ref etag) = entry.etag {
                 debug!(path, "cache hit (stale), trying conditional request");
                 let response =
-                    conditional_request(&state, &path, query.as_deref(), token, etag).await;
+                    conditional_request(&state, &path, query.as_deref(), &token, etag).await;
                 match response {
                     ConditionalResult::NotModified => {
                         let mut refreshed = entry.clone();
@@ -99,7 +117,7 @@ pub async fn proxy_handler(State(state): State<Arc<AppState>>, req: Request) -> 
     }
 
     // Fetch from GitHub
-    let result = fetch_from_github(&state, &path, query.as_deref(), token).await;
+    let result = fetch_from_github(&state, &path, query.as_deref(), &token).await;
     match result {
         Ok(resp) => store_and_respond(&state, &cache_key, ttl, resp),
         Err(e) => {
@@ -175,7 +193,7 @@ async fn fetch_from_github(
     query: Option<&str>,
     token: &str,
 ) -> std::result::Result<GithubResponse, reqwest::Error> {
-    let url = build_github_url(path, query);
+    let url = state.build_url(path, query);
     let mut req = state.client.get(&url);
     if !token.is_empty() {
         req = req.header("Authorization", format!("Bearer {token}"));
@@ -200,7 +218,7 @@ async fn conditional_request(
     token: &str,
     etag: &str,
 ) -> ConditionalResult {
-    let url = build_github_url(path, query);
+    let url = state.build_url(path, query);
     let mut req = state.client.get(&url);
     if !token.is_empty() {
         req = req.header("Authorization", format!("Bearer {token}"));
@@ -226,10 +244,10 @@ async fn forward_to_github(
     method: &str,
     path: &str,
     query: Option<&str>,
-    headers: &HeaderMap,
     token: &str,
+    body: Option<axum::body::Bytes>,
 ) -> Response {
-    let url = build_github_url(path, query);
+    let url = state.build_url(path, query);
     let req_builder = match method {
         "POST" => state.client.post(&url),
         "PUT" => state.client.put(&url),
@@ -242,10 +260,10 @@ async fn forward_to_github(
     if !token.is_empty() {
         req = req.header("Authorization", format!("Bearer {token}"));
     }
-    // Forward content-type if present
-    if let Some(ct) = headers.get("content-type") {
-        if let Ok(v) = ct.to_str() {
-            req = req.header("Content-Type", v);
+    if let Some(ref body_bytes) = body {
+        if !body_bytes.is_empty() {
+            req = req.header("Content-Type", "application/json");
+            req = req.body(body_bytes.clone());
         }
     }
     req = req.header("Accept", "application/vnd.github+json");
@@ -298,13 +316,6 @@ async fn parse_github_response(resp: reqwest::Response) -> GithubResponse {
     }
 }
 
-fn build_github_url(path: &str, query: Option<&str>) -> String {
-    match query {
-        Some(q) if !q.is_empty() => format!("{GITHUB_API_BASE}{path}?{q}"),
-        _ => format!("{GITHUB_API_BASE}{path}"),
-    }
-}
-
 /// Get the parent path for cache invalidation.
 /// e.g., "/repos/org/repo/issues/1" → "/repos/org/repo/issues"
 fn parent_path(path: &str) -> Option<&str> {
@@ -315,19 +326,48 @@ fn parent_path(path: &str) -> Option<&str> {
 mod tests {
     use super::*;
 
+    fn make_state() -> AppState {
+        let dir = tempfile::tempdir().unwrap();
+        let db_path = dir.path().join("test.redb");
+        AppState {
+            cache: CacheStore::open(&db_path).unwrap(),
+            ttl_config: TtlConfig::default(),
+            client: reqwest::Client::new(),
+            github_base_url: DEFAULT_GITHUB_API_BASE.to_string(),
+        }
+    }
+
     #[test]
-    fn test_build_github_url_without_query() {
+    fn test_build_url_without_query() {
+        let state = make_state();
         assert_eq!(
-            build_github_url("/repos/org/repo", None),
+            state.build_url("/repos/org/repo", None),
             "https://api.github.com/repos/org/repo"
         );
     }
 
     #[test]
-    fn test_build_github_url_with_query() {
+    fn test_build_url_with_query() {
+        let state = make_state();
         assert_eq!(
-            build_github_url("/repos/org/repo/issues", Some("state=open")),
+            state.build_url("/repos/org/repo/issues", Some("state=open")),
             "https://api.github.com/repos/org/repo/issues?state=open"
+        );
+    }
+
+    #[test]
+    fn test_build_url_custom_base() {
+        let dir = tempfile::tempdir().unwrap();
+        let db_path = dir.path().join("test.redb");
+        let state = AppState {
+            cache: CacheStore::open(&db_path).unwrap(),
+            ttl_config: TtlConfig::default(),
+            client: reqwest::Client::new(),
+            github_base_url: "http://localhost:4001".to_string(),
+        };
+        assert_eq!(
+            state.build_url("/repos/org/repo", None),
+            "http://localhost:4001/repos/org/repo"
         );
     }
 

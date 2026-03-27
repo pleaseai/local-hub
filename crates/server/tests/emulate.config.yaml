@@ -1,0 +1,29 @@
+tokens:
+  gho_test_token_admin:
+    login: testadmin
+    scopes:
+      - repo
+      - user
+      - admin:org
+  gho_test_token_user:
+    login: testuser
+    scopes:
+      - repo
+      - user
+
+github:
+  users:
+    - login: testadmin
+      name: Test Admin
+    - login: testuser
+      name: Test User
+  orgs:
+    - login: testorg
+      name: Test Organization
+  repos:
+    - owner: testorg
+      name: test-repo
+      description: A test repository
+      language: Rust
+      topics: [test, cache]
+      auto_init: true
