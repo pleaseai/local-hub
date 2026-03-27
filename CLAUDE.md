@@ -2,6 +2,11 @@
 
 Local GitHub API cache proxy — reduce latency and save rate limits.
 
+## References
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) — Bird's-eye view of the codebase
+- [.please/INDEX.md](.please/INDEX.md) — Workspace navigation (tracks, specs, decisions)
+
 ## Tech Stack
 
 - **Language**: Rust (stable)
