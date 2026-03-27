@@ -1,0 +1,39 @@
+crates/server/src/error.rs
+  6815fda01ba5f5ad 1-35
+Cargo.toml
+  6815fda01ba5f5ad 17,21,30-31
+crates/server/src/cache.rs
+  6815fda01ba5f5ad 1-248,250-252,254-284
+crates/server/src/key.rs
+  6815fda01ba5f5ad 1-99
+crates/server/src/main.rs
+  6815fda01ba5f5ad 1-41,43-168
+crates/server/src/ttl.rs
+  6815fda01ba5f5ad 1-130
+crates/server/Cargo.toml
+  6815fda01ba5f5ad 30-33
+crates/server/src/server.rs
+  6815fda01ba5f5ad 1-20,22-28,30-63
+crates/server/src/proxy.rs
+  6815fda01ba5f5ad 1-22,24-43,45-122,124-348
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "b235085697c62b6dccbd72ab9802b59457692967",
+  "prompts": {
+    "6815fda01ba5f5ad": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ce0431f1-dd90-43d9-a134-2e4771a6a4d4",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Minsu Lee <amond@amond.net>",
+      "messages": [],
+      "total_additions": 1168,
+      "total_deletions": 27,
+      "accepted_lines": 1127,
+      "overriden_lines": 6
+    }
+  }
+}
