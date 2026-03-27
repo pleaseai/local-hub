@@ -6,3 +6,8 @@ pre-commit:
     clippy:
       glob: "*.rs"
       run: cargo clippy -- -D warnings
+
+commit-msg:
+  commands:
+    commitlint:
+      run: bunx --no -- commitlint --edit {1}
