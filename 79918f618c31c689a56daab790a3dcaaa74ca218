@@ -1,0 +1,27 @@
+apps/web/.env.example
+  2dda355bc365bd5a 19-20,23-28,38,40-41,48,50-53
+apps/web/package.json
+  2dda355bc365bd5a 26-28
+apps/web/src/lib/ai-providers.ts
+  2dda355bc365bd5a 1-73
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "79918f618c31c689a56daab790a3dcaaa74ca218",
+  "prompts": {
+    "2dda355bc365bd5a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "27f0e826-e433-41b1-a772-b7657a087989",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Minsu Lee <amond@amond.net>",
+      "messages": [],
+      "total_additions": 94,
+      "total_deletions": 49,
+      "accepted_lines": 94,
+      "overriden_lines": 0
+    }
+  }
+}
