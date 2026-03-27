@@ -1,0 +1,47 @@
+.husky/commit-msg
+  6815fda01ba5f5ad 1
+packages/server/package.json
+  6815fda01ba5f5ad 1-18
+.claude/settings.json
+  6815fda01ba5f5ad 1-37
+eslint.config.mjs
+  6815fda01ba5f5ad 1-6
+.gitignore
+  6815fda01ba5f5ad 1-8
+commitlint.config.js
+  6815fda01ba5f5ad 1-6
+turbo.json
+  6815fda01ba5f5ad 1-15
+CLAUDE.md
+  6815fda01ba5f5ad 1-32
+.husky/pre-commit
+  6815fda01ba5f5ad 1
+packages/server/src/index.ts
+  6815fda01ba5f5ad 1
+packages/server/tsconfig.json
+  6815fda01ba5f5ad 1-5,10-12
+package.json
+  6815fda01ba5f5ad 1-19,21-30
+tsconfig.json
+  6815fda01ba5f5ad 1-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "738ae3b36460d9d94dbe700c96de4da0beac5b04",
+  "prompts": {
+    "6815fda01ba5f5ad": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ce0431f1-dd90-43d9-a134-2e4771a6a4d4",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Minsu Lee <amond@amond.net>",
+      "messages": [],
+      "total_additions": 174,
+      "total_deletions": 0,
+      "accepted_lines": 170,
+      "overriden_lines": 1
+    }
+  }
+}
