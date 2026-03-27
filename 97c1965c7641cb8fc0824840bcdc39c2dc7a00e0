@@ -1,0 +1,39 @@
+npm/local-hub/package.json
+  2c171b64e6dbcef6 1-19
+npm/darwin-x64/package.json
+  2c171b64e6dbcef6 1-12
+npm/linux-x64/package.json
+  2c171b64e6dbcef6 1-12
+npm/local-hub/bin/local-hub
+  2c171b64e6dbcef6 1-45
+README.md
+  2c171b64e6dbcef6 36-41
+release-please-config.json
+  2c171b64e6dbcef6 20-26
+npm/linux-arm64/package.json
+  2c171b64e6dbcef6 1-12
+.github/workflows/release.yml
+  2c171b64e6dbcef6 22,47,51,55,59,102-112,133-178
+npm/darwin-arm64/package.json
+  2c171b64e6dbcef6 1-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "97c1965c7641cb8fc0824840bcdc39c2dc7a00e0",
+  "prompts": {
+    "2c171b64e6dbcef6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "22674210-d05d-48e4-afe4-99e04139cf98",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Minsu Lee <amond@amond.net>",
+      "messages": [],
+      "total_additions": 187,
+      "total_deletions": 0,
+      "accepted_lines": 187,
+      "overriden_lines": 0
+    }
+  }
+}
