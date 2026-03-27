@@ -1,0 +1,29 @@
+apps/web/src/lib/auth.ts
+  2dda355bc365bd5a 34
+apps/web/src/lib/db.ts
+  2dda355bc365bd5a 3,6,9
+apps/web/prisma/schema.prisma
+  2dda355bc365bd5a 8,269-270,308,322
+apps/web/prisma.config.ts
+  2dda355bc365bd5a 1,13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "83d2f00ff694616b88c6c519107e3a455a424f1f",
+  "prompts": {
+    "2dda355bc365bd5a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "27f0e826-e433-41b1-a772-b7657a087989",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Minsu Lee <amond@amond.net>",
+      "messages": [],
+      "total_additions": 11,
+      "total_deletions": 47,
+      "accepted_lines": 11,
+      "overriden_lines": 0
+    }
+  }
+}
