@@ -117,9 +117,10 @@ export async function updateUserSettings(
 	if (updates.codeFontSize !== undefined) data.codeFontSize = updates.codeFontSize;
 	if (updates.onboardingDone !== undefined) data.onboardingDone = updates.onboardingDone;
 
-	const updated = await prisma.userSettings.update({
+	const updated = await prisma.userSettings.upsert({
 		where: { userId },
-		data,
+		create: { userId, updatedAt: now, ...data },
+		update: data,
 	});
 
 	return toSettings(updated);
