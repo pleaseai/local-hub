@@ -16,7 +16,7 @@ hyper-util = { version = "0.1", features = [
   "tokio",
   "service"
 ] }
-reqwest = { version = "0.12", features = [ "json" ] }
+reqwest = { version = "0.13", features = [ "json" ] }
 serde = { version = "1", features = [ "derive" ] }
 serde_json = "1"
 clap = { version = "4", features = [
@@ -25,10 +25,10 @@ clap = { version = "4", features = [
 ] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = [ "env-filter" ] }
-sha2 = "0.10"
+sha2 = "0.11"
 hex = "0.4"
 thiserror = "2"
-redb = "2"
+redb = "3"
 http = "1"
 tower = { version = "0.5", features = [ "util" ] }
 anyhow = "1"
