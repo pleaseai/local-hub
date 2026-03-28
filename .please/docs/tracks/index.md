@@ -4,8 +4,9 @@
 
 ## Active
 
-| Track | Feature | Type | Issue | Started | Status |
-| ----- | ------- | ---- | ----- | ------- | ------ |
+| Track                                                                 | Feature                                                                                        | Type    | Issue | Started    | Status      |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------- | ----- | ---------- | ----------- |
+| [local-better-hub-20260327](active/local-better-hub-20260327/plan.md) | Local Better Hub — copy vendor/better-hub, route through local-hub proxy, add CLI AI providers | feature | —     | 2026-03-27 | in_progress |
 
 ## Recently Completed
 

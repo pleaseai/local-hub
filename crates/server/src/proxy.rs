@@ -63,12 +63,12 @@ pub async fn proxy_handler(State(state): State<Arc<AppState>>, req: Request) -> 
         )
         .await;
         // Invalidate related cache on mutations
-        if !token.is_empty() {
-            if let Some(parent) = parent_path(&path) {
-                let prefix = key::invalidation_prefix(&token, parent);
-                if let Err(e) = state.cache.remove_by_prefix(&prefix) {
-                    warn!(error = %e, prefix, "failed to invalidate cache");
-                }
+        if !token.is_empty()
+            && let Some(parent) = parent_path(&path)
+        {
+            let prefix = key::invalidation_prefix(&token, parent);
+            if let Err(e) = state.cache.remove_by_prefix(&prefix) {
+                warn!(error = %e, prefix, "failed to invalidate cache");
             }
         }
         return response;
@@ -260,11 +260,11 @@ async fn forward_to_github(
     if !token.is_empty() {
         req = req.header("Authorization", format!("Bearer {token}"));
     }
-    if let Some(ref body_bytes) = body {
-        if !body_bytes.is_empty() {
-            req = req.header("Content-Type", "application/json");
-            req = req.body(body_bytes.clone());
-        }
+    if let Some(ref body_bytes) = body
+        && !body_bytes.is_empty()
+    {
+        req = req.header("Content-Type", "application/json");
+        req = req.body(body_bytes.clone());
     }
     req = req.header("Accept", "application/vnd.github+json");
     req = req.header("X-GitHub-Api-Version", "2022-11-28");
