@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/pleaseai/local-hub/compare/local-hub-v0.3.0...local-hub-v0.4.0) (2026-03-28)
+
+
+### Features
+
+* **web:** add local Better Hub dashboard with local-hub proxy routing ([#2](https://github.com/pleaseai/local-hub/issues/2)) ([82290fa](https://github.com/pleaseai/local-hub/commit/82290fa4e5720430f50b80ddd4f43b7379dc21e8))
+
 ## [0.3.0](https://github.com/pleaseai/local-hub/compare/local-hub-v0.2.0...local-hub-v0.3.0) (2026-03-27)
 
 
