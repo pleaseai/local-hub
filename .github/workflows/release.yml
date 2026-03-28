@@ -2,7 +2,16 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      deploy_only:
+        description: 'Skip release-please, run build+deploy for existing tag'
+        type: boolean
+        default: false
+      tag_name:
+        description: 'Tag name to deploy (required if deploy_only=true, e.g. local-hub-v0.4.0)'
+        type: string
+        default: ''
 
 permissions:
   contents: write
@@ -15,6 +24,7 @@ env:
 
 jobs:
   release-please:
+    if: ${{ !inputs.deploy_only }}
     runs-on: ubuntu-latest
     outputs:
       release_created: ${{ steps.release.outputs['crates/server--release_created'] }}
@@ -36,7 +46,7 @@ jobs:
 
   build-binaries:
     needs: release-please
-    if: ${{ needs.release-please.outputs.release_created }}
+    if: ${{ always() && (needs.release-please.outputs.release_created || inputs.deploy_only) }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -118,8 +128,10 @@ jobs:
 
   upload-release-assets:
     needs: [release-please, build-binaries]
-    if: ${{ needs.release-please.outputs.release_created }}
+    if: ${{ always() && (needs.release-please.outputs.release_created || inputs.deploy_only) }}
     runs-on: ubuntu-latest
+    env:
+      RESOLVED_TAG: ${{ needs.release-please.outputs.tag_name || inputs.tag_name }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
@@ -132,13 +144,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload ${{ needs.release-please.outputs.tag_name }} \
+          gh release upload ${{ env.RESOLVED_TAG }} \
             artifacts/* \
             --clobber
 
   npm-publish:
     needs: [release-please, build-binaries]
-    if: ${{ needs.release-please.outputs.release_created }}
+    if: ${{ always() && (needs.release-please.outputs.release_created || inputs.deploy_only) }}
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -165,7 +177,7 @@ jobs:
 
   npm-publish-main:
     needs: [release-please, npm-publish]
-    if: ${{ needs.release-please.outputs.release_created }}
+    if: ${{ always() && (needs.release-please.outputs.release_created || inputs.deploy_only) }}
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -184,8 +196,10 @@ jobs:
 
   update-homebrew-formula:
     needs: [release-please, upload-release-assets]
-    if: ${{ needs.release-please.outputs.release_created }}
+    if: ${{ always() && (needs.release-please.outputs.release_created || inputs.deploy_only) }}
     runs-on: ubuntu-latest
+    env:
+      RESOLVED_TAG: ${{ needs.release-please.outputs.tag_name || inputs.tag_name }}
     steps:
       - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2.2.2
         id: app-token
@@ -210,7 +224,7 @@ jobs:
 
       - name: Update Formula
         run: |
-          TAG_NAME=${{ needs.release-please.outputs.tag_name }}
+          TAG_NAME=${{ env.RESOLVED_TAG }}
           VERSION_NO_V=${TAG_NAME#local-hub-v}
 
           # Download checksums
