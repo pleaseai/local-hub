@@ -1,3 +1,28 @@
 [tools]
 lefthook = "latest"
 rust = "stable"
+
+[tasks.build]
+description = "Build local-hub (release)"
+run = "cargo build --release"
+
+[tasks.dev]
+description = "Run local-hub + web dev server"
+depends = ["build"]
+run = """
+./target/release/local-hub start &
+cd apps/web && npm run dev
+"""
+
+[tasks.hub]
+description = "Build and start local-hub"
+depends = ["build"]
+run = "./target/release/local-hub start"
+
+[tasks.web]
+description = "Start web dev server"
+run = "cd apps/web && npm run dev"
+
+[tasks.stop]
+description = "Stop local-hub"
+run = "kill $(lsof -ti :8787) 2>/dev/null || echo 'not running'"

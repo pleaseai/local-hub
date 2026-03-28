@@ -95,6 +95,19 @@ Tokens are **never stored**. Only a truncated SHA-256 hash is used as a cache na
 - Token rotation automatically creates a fresh namespace
 - No risk of serving cached data across different permission levels
 
+## Development
+
+Requires [mise](https://mise.jdx.dev) for toolchain management.
+
+```bash
+mise install              # Install rust + lefthook
+mise run dev              # Build local-hub + start web dev server
+mise run hub              # Build and start local-hub only
+mise run web              # Start web dev server only
+mise run build            # Build local-hub (release)
+mise run stop             # Stop local-hub
+```
+
 ## Configuration
 
 ```bash
