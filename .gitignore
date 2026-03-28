@@ -11,3 +11,5 @@ node_modules/
 .please/state/
 apps/web/node_modules/
 apps/web/.next/
+apps/web/prisma/dev.db
+apps/web/prisma/dev.db-journal
