@@ -34,12 +34,16 @@ export const auth = betterAuth({
 		joins: true,
 	},
 	plugins: [
-		dash({
-			activityTracking: {
-				enabled: true,
-			},
-		}),
-		sentinel(),
+		...(process.env.BETTER_AUTH_API_KEY
+			? [
+					dash({
+						activityTracking: {
+							enabled: true,
+						},
+					}),
+					sentinel(),
+				]
+			: []),
 		admin(),
 		patSignIn(),
 		...(process.env.VERCEL
