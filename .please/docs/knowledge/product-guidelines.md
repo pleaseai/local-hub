@@ -10,7 +10,7 @@
 
 ## CLI UX
 
-- Commands follow standard Unix conventions: `local-hub start`, `local-hub stop`, `local-hub status`, `local-hub flush`
+- Commands follow standard Unix conventions: `local-hub start`, `local-hub status`, `local-hub flush`
 - Quiet by default — only log errors. Use `--verbose` for debug output.
 - Exit codes: 0 = success, 1 = error, 2 = already running (for `start`)
 

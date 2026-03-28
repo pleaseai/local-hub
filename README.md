@@ -61,6 +61,12 @@ gh config set http_unix_socket ~/.local-hub/local-hub.sock
 # Use gh as normal — requests are now cached
 gh issue list
 
+# Show cache statistics
+local-hub status
+
+# Flush cache entries
+local-hub flush
+
 # For fetch/octokit clients, use HTTP endpoint
 # baseUrl: http://localhost:8787
 ```
@@ -111,11 +117,14 @@ local-hub status
 crates/
 └── server/
     └── src/
-        ├── main.rs       # CLI entry point (start, stop, status, flush)
-        ├── server.rs      # axum HTTP proxy (TCP + Unix socket)
-        ├── cache.rs       # redb cache layer (get, set, invalidate)
-        ├── key.rs         # Cache key generation (token hash + URL normalization)
-        └── ttl.rs         # Per-endpoint TTL rules
+        ├── main.rs       # CLI entry point (start, status, flush)
+        ├── server.rs     # axum HTTP proxy (TCP + Unix socket)
+        ├── proxy.rs      # Request forwarding to GitHub API
+        ├── cache.rs      # redb cache layer (get, set, invalidate)
+        ├── key.rs        # Cache key generation (token hash + URL normalization)
+        ├── ttl.rs        # Per-endpoint TTL rules
+        ├── error.rs      # Typed error definitions
+        └── lib.rs        # Library root (re-exports)
 ```
 
 ### Tech stack
@@ -127,10 +136,10 @@ crates/
 
 ## Roadmap
 
-- [ ] **Phase 1**: Local proxy with TTL + ETag caching
+- [x] **Phase 1**: Local proxy with TTL + ETag caching
 - [ ] **Phase 2**: Webhook-based cache invalidation (via relay-worker)
 - [ ] **Phase 3**: Team shared cache (L2 layer)
-- [ ] **Phase 4**: Web client dashboard (via better-hub)
+- [ ] **Phase 4**: Web client dashboard (via better-hub) — in progress (`apps/web`)
 
 ## License
 

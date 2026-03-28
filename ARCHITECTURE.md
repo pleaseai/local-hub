@@ -23,6 +23,7 @@ cache namespace prefixes.
 | Path                            | Purpose                                       |
 | ------------------------------- | --------------------------------------------- |
 | `crates/server/src/main.rs`     | CLI entry point — parses args, starts server  |
+| `crates/server/CHANGELOG.md`    | Release history — [view](crates/server/CHANGELOG.md) |
 | `.github/workflows/release.yml` | CI/CD — release-please + cross-platform build |
 | `Cargo.toml`                    | Workspace root — dependency versions          |
 
@@ -32,12 +33,14 @@ cache namespace prefixes.
 crates/
 └── server/               # @pleaseai/local-hub binary
     └── src/
-        ├── main.rs        # CLI (clap) — start, stop, status, flush
-        ├── server.rs       # axum router + dual listener (Unix + TCP)
-        ├── proxy.rs        # Request forwarding to GitHub API
-        ├── cache.rs        # redb cache layer (get, set, invalidate)
-        ├── key.rs          # Cache key generation (token hash + URL)
-        └── ttl.rs          # Per-endpoint TTL configuration
+        ├── main.rs        # CLI (clap) — start, status, flush
+        ├── server.rs      # axum router + dual listener (Unix + TCP)
+        ├── proxy.rs       # Request forwarding to GitHub API
+        ├── cache.rs       # redb cache layer (get, set, invalidate)
+        ├── key.rs         # Cache key generation (token hash + URL)
+        ├── ttl.rs         # Per-endpoint TTL configuration
+        ├── error.rs       # Typed error definitions
+        └── lib.rs         # Library root (re-exports)
 ```
 
 ### Planned crates
@@ -45,7 +48,7 @@ crates/
 | Crate    | Purpose                           | Status            |
 | -------- | --------------------------------- | ----------------- |
 | `server` | Proxy server + CLI                | Active            |
-| `web`    | Dashboard client (via better-hub) | Planned (Phase 4) |
+| `web`    | Dashboard client (via better-hub) | In progress (`apps/web`) |
 
 ## Data Flow
 

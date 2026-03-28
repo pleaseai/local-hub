@@ -45,7 +45,7 @@ Eliminate GitHub API latency and rate limit friction for developers by providing
 
 ## Roadmap
 
-- **Phase 1**: Local proxy with TTL + ETag caching
+- **Phase 1**: Local proxy with TTL + ETag caching — shipped (v0.3.0)
 - **Phase 2**: Webhook-based cache invalidation (via relay-worker)
 - **Phase 3**: Team shared cache (Cloudflare Worker + D1 as L2)
-- **Phase 4**: Web client dashboard (via better-hub)
+- **Phase 4**: Web client dashboard (via better-hub) — in progress (`apps/web`)

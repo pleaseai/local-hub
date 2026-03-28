@@ -47,7 +47,7 @@ Local GitHub API cache proxy — reduce latency and save rate limits.
 crates/
   server/               # local-hub binary — HTTP proxy server + CLI
     src/
-      main.rs           # Entry point + CLI (start, stop, status, flush)
+      main.rs           # Entry point + CLI (start, status, flush)
 ```
 
 ## Monorepo
