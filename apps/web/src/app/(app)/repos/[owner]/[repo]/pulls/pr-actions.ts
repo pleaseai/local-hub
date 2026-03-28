@@ -1,5 +1,6 @@
-import { GITHUB_API_URL, GITHUB_GRAPHQL_URL } from "@/lib/github-config";
 "use server";
+
+import { GITHUB_API_URL, GITHUB_GRAPHQL_URL } from "@/lib/github-config";
 
 import {
 	getOctokit,

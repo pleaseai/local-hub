@@ -27,7 +27,7 @@ const KNOWN_ROUTES = [
 
 const nextConfig: NextConfig = {
 	devIndicators: false,
-	serverExternalPackages: ["@prisma/client"],
+	serverExternalPackages: ["@prisma/client", "samlify", "@authenio/xml-encryption"],
 	experimental: {
 		staleTimes: {
 			dynamic: 300,

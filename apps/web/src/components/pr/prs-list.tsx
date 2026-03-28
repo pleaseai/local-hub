@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useCallback, useTransition, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { GithubAvatar } from "@/components/shared/github-avatar";
 import {
@@ -817,6 +817,7 @@ export function PRsList({
 	) => Promise<{ error?: string; success?: boolean }>;
 }) {
 	type TabState = "open" | "merged" | "closed";
+	const router = useRouter();
 	const searchParams = useSearchParams();
 	const tabParam = searchParams.get("tab");
 	const initialTab: TabState =
@@ -1775,9 +1776,19 @@ export function PRsList({
 							currentUserLogin.toLowerCase();
 
 					return (
-						<Link
+						<div
 							key={pr.id}
-							href={`/${owner}/${repo}/pulls/${pr.number}`}
+							role="link"
+							tabIndex={0}
+							onClick={(e) => {
+								if ((e.target as HTMLElement).closest("a")) return;
+								router.push(`/${owner}/${repo}/pulls/${pr.number}`);
+							}}
+							onKeyDown={(e) => {
+								if (e.key === "Enter" && !(e.target as HTMLElement).closest("a")) {
+									router.push(`/${owner}/${repo}/pulls/${pr.number}`);
+								}
+							}}
 							onMouseEnter={() =>
 								handlePRHover(
 									pr.number,
@@ -1787,7 +1798,7 @@ export function PRsList({
 							onContextMenu={(e) =>
 								handleContextMenu(e, pr)
 							}
-							className="group flex items-start gap-3 px-4 py-3 hover:bg-muted/50 dark:hover:bg-white/2 transition-colors"
+							className="group flex items-start gap-3 px-4 py-3 hover:bg-muted/50 dark:hover:bg-white/2 transition-colors cursor-pointer"
 						>
 							{isMerged ? (
 								<GitMerge className="w-3.5 h-3.5 shrink-0 mt-0.5 text-alert-important" />
@@ -2055,7 +2066,7 @@ export function PRsList({
 									)}
 								</div>
 							</div>
-						</Link>
+						</div>
 					);
 				})}
 
