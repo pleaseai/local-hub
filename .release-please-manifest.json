@@ -1,4 +1,4 @@
 {
-  "crates/server": "0.3.0",
-  "apps/web": "0.1.0"
+  "crates/server": "0.4.0",
+  "apps/web": "0.2.0"
 }
