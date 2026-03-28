@@ -19,23 +19,30 @@ export default async function DashboardPage() {
 	const session = await getServerSession();
 	if (!session) return redirect("/");
 	const { githubUser } = session;
+	const login = githubUser.login as string | undefined;
 	const { reviewRequests, myOpenPRs, myIssues, repos, notifications, activity, trending } =
 		await all({
 			reviewRequests: async () =>
-				await searchIssues(
-					`is:pr is:open review-requested:${githubUser.login}`,
-					10,
-				),
+				login
+					? await searchIssues(
+							`is:pr is:open review-requested:${login}`,
+							10,
+						)
+					: [],
 			myOpenPRs: async () =>
-				await searchIssues(`is:pr is:open author:${githubUser.login}`, 10),
+				login
+					? await searchIssues(`is:pr is:open author:${login}`, 10)
+					: [],
 			myIssues: async () =>
-				await searchIssues(
-					`is:issue is:open assignee:${githubUser.login}`,
-					10,
-				),
+				login
+					? await searchIssues(
+							`is:issue is:open assignee:${login}`,
+							10,
+						)
+					: [],
 			repos: async () => await getUserRepos("updated", 30),
 			notifications: async () => await getNotifications(20),
-			activity: async () => await getUserEvents(githubUser.login, 20),
+			activity: async () => (login ? await getUserEvents(login, 20) : []),
 			trending: async () => await getTrendingRepos(undefined, "weekly", 8),
 		});
 
