@@ -227,26 +227,38 @@ async fn handle_mutation(
     token: &str,
     body_bytes: Option<axum::body::Bytes>,
 ) -> Response {
-    let response = forward_to_github(state, method, path, query, token, body_bytes).await;
+    let gh_resp = forward_mutation(state, method, path, query, token, body_bytes).await;
 
-    // Extract entities from mutation response for invalidation
-    if !token.is_empty() {
-        // Try to read the response body for entity extraction
-        // (we need to reconstruct the response after reading)
-        // For now, use prefix invalidation as the primary strategy
-        // Entity invalidation from mutation responses will be extracted
-        // from the response body when possible
+    match gh_resp {
+        Ok(resp) => {
+            // Extract entities from mutation response for cross-protocol invalidation
+            if !token.is_empty() && (200..300).contains(&resp.status) {
+                let is_graphql = path == "/graphql";
+                let entity_ids = if is_graphql {
+                    entity::extract_graphql_entity_ids(&resp.body)
+                } else {
+                    entity::extract_entity_ids(&resp.body)
+                };
 
-        // Prefix-based invalidation (fallback, always runs)
-        if let Some(parent) = parent_path(path) {
-            let prefix = key::invalidation_prefix(token, parent);
-            if let Err(e) = state.cache.remove_by_prefix(&prefix).await {
-                warn!(error = %e, prefix, "failed to invalidate cache by prefix");
+                // Entity-based invalidation (cross-protocol)
+                if !entity_ids.is_empty()
+                    && let Err(e) = state.cache.invalidate_by_entities(&entity_ids).await
+                {
+                    warn!(error = %e, "failed to invalidate cache by entities");
+                }
+
+                // Prefix-based invalidation (fallback for REST mutations)
+                if !is_graphql && let Some(parent) = parent_path(path) {
+                    let prefix = key::invalidation_prefix(token, parent);
+                    if let Err(e) = state.cache.remove_by_prefix(&prefix).await {
+                        warn!(error = %e, prefix, "failed to invalidate cache by prefix");
+                    }
+                }
             }
+            github_response_to_axum(resp)
         }
+        Err(e) => (StatusCode::BAD_GATEWAY, format!("upstream error: {e}")).into_response(),
     }
-
-    response
 }
 
 struct GithubResponse {
@@ -448,14 +460,14 @@ async fn conditional_graphql_request(
     }
 }
 
-async fn forward_to_github(
+async fn forward_mutation(
     state: &AppState,
     method: &str,
     path: &str,
     query: Option<&str>,
     token: &str,
     body: Option<axum::body::Bytes>,
-) -> Response {
+) -> std::result::Result<GithubResponse, reqwest::Error> {
     let url = state.build_url(path, query);
     let req_builder = match method {
         "POST" => state.client.post(&url),
@@ -478,13 +490,8 @@ async fn forward_to_github(
     req = req.header("Accept", "application/vnd.github+json");
     req = req.header("X-GitHub-Api-Version", "2022-11-28");
 
-    match req.send().await {
-        Ok(resp) => {
-            let gh_resp = parse_github_response(resp).await;
-            github_response_to_axum(gh_resp)
-        }
-        Err(e) => (StatusCode::BAD_GATEWAY, format!("upstream error: {e}")).into_response(),
-    }
+    let resp = req.send().await?;
+    Ok(parse_github_response(resp).await)
 }
 
 async fn parse_github_response(resp: reqwest::Response) -> GithubResponse {
