@@ -1,0 +1,25 @@
+.please/docs/tracks/index.md
+  46ce4e9552349e80 10
+.please/docs/tracks/active/entity-graph-cache-20260329/metadata.json
+  46ce4e9552349e80 4,6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "14a68c97be8c76a476352096130dd24ac87c9e9c",
+  "prompts": {
+    "46ce4e9552349e80": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b26df1c1-bbf1-4ba7-aa2e-26e1365c4bee",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Minsu Lee <amond@amond.net>",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 3,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    }
+  }
+}
