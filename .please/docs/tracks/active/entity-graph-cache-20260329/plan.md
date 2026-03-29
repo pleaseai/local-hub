@@ -139,27 +139,27 @@ crates/server/src/
 
 ### Phase 1: Storage Foundation
 
-- [ ] T001 Create libsql storage module with connection management and schema DDL (file: crates/server/src/storage.rs)
-- [ ] T002 [P] Replace error types from redb to libsql (file: crates/server/src/error.rs) (depends on T001)
-- [ ] T003 Build EntityAwareCache facade with async CRUD + entity registration (file: crates/server/src/entity_cache.rs) (depends on T001, T002)
+- [x] T001 Create libsql storage module with connection management and schema DDL (file: crates/server/src/storage.rs)
+- [x] T002 [P] Replace error types from redb to libsql (file: crates/server/src/error.rs) (depends on T001)
+- [x] T003 Build EntityAwareCache facade with async CRUD + entity registration (file: crates/server/src/entity_cache.rs) (depends on T001, T002)
 
 ### Phase 2: Entity & GraphQL Modules
 
-- [ ] T004 [P] Create entity extractor for REST and GraphQL responses (file: crates/server/src/entity.rs)
-- [ ] T005 [P] Create request classifier for REST/GraphQL routing (file: crates/server/src/classify.rs)
-- [ ] T006 [P] Add GraphQL cache key generation (file: crates/server/src/key.rs) (depends on T001)
+- [x] T004 [P] Create entity extractor for REST and GraphQL responses (file: crates/server/src/entity.rs)
+- [x] T005 [P] Create request classifier for REST/GraphQL routing (file: crates/server/src/classify.rs)
+- [x] T006 [P] Add GraphQL cache key generation (file: crates/server/src/key.rs) (depends on T001)
 
 ### Phase 3: Proxy Rewrite
 
-- [ ] T007 Rewrite proxy handler with unified entity-aware flow (file: crates/server/src/proxy.rs) (depends on T003, T004, T005, T006)
-- [ ] T008 Update server wiring and AppState for EntityAwareCache (file: crates/server/src/server.rs) (depends on T003, T007)
+- [x] T007 Rewrite proxy handler with unified entity-aware flow (file: crates/server/src/proxy.rs) (depends on T003, T004, T005, T006)
+- [x] T008 Update server wiring and AppState for EntityAwareCache (file: crates/server/src/server.rs) (depends on T003, T007)
 
 ### Phase 4: Integration & Cleanup
 
-- [ ] T009 Update lib.rs exports and main.rs initialization (file: crates/server/src/main.rs) (depends on T007, T008)
-- [ ] T010 Remove old cache.rs, update Cargo.toml dependencies (file: crates/server/Cargo.toml) (depends on T009)
-- [ ] T011 Add integration tests for cross-protocol invalidation (file: crates/server/tests/integration.rs) (depends on T009)
-- [ ] T012 Add GraphQL-specific TTL rules (file: crates/server/src/ttl.rs) (depends on T007)
+- [x] T009 Update lib.rs exports and main.rs initialization (file: crates/server/src/main.rs) (depends on T007, T008)
+- [x] T010 Remove old cache.rs, update Cargo.toml dependencies (file: crates/server/Cargo.toml) (depends on T009)
+- [x] T011 Add integration tests for cross-protocol invalidation (file: crates/server/tests/integration.rs) (depends on T009)
+- [x] T012 Add GraphQL-specific TTL rules (file: crates/server/src/ttl.rs) (depends on T007)
 
 ## Key Files
 
@@ -289,6 +289,28 @@ pub fn graphql_cache_key(token: &str, query: &str, variables: Option<&str>) -> S
 - [ ] AC-4: Entity extraction correctly identifies `node_id` from REST and GraphQL responses
 - [ ] AC-5: All existing REST caching behavior continues to work (TTL, ETag, token isolation)
 - [ ] AC-6: libsql replaces redb with no data loss during migration
+
+## Progress
+
+- [x] (2026-03-29 17:45 KST) T001 Create libsql storage module
+      Evidence: `cargo test --lib` → 3 storage tests passed
+- [x] (2026-03-29 17:45 KST) T002 Replace error types from redb to libsql
+- [x] (2026-03-29 17:45 KST) T003 Build EntityAwareCache facade
+      Evidence: `cargo test --lib` → 14 entity_cache tests passed (CRUD + entity deps + invalidation)
+- [x] (2026-03-29 17:45 KST) T004 Create entity extractor
+      Evidence: `cargo test --lib` → 9 entity tests passed
+- [x] (2026-03-29 17:45 KST) T005 Create request classifier
+      Evidence: `cargo test --lib` → 10 classify tests passed
+- [x] (2026-03-29 17:45 KST) T006 Add GraphQL cache key generation
+      Evidence: `cargo test --lib` → 12 key tests passed (8 existing + 4 new graphql)
+- [x] (2026-03-29 17:45 KST) T007 Rewrite proxy handler
+      Evidence: `cargo test --lib` → 4 proxy tests passed
+- [x] (2026-03-29 17:45 KST) T008 Update server wiring
+- [x] (2026-03-29 17:45 KST) T009 Update lib.rs + main.rs
+- [x] (2026-03-29 17:45 KST) T010 Remove cache.rs, update Cargo.toml
+- [x] (2026-03-29 17:45 KST) T011 Update integration tests
+- [x] (2026-03-29 17:45 KST) T012 Add GraphQL TTL rule
+      Evidence: `cargo test --lib` → 62 total tests passed, clippy clean
 
 ## Decision Log
 

@@ -37,7 +37,7 @@ Local GitHub API cache proxy — reduce latency and save rate limits.
 - **Async runtime**: tokio
 - **HTTP server**: axum + hyper (TCP + Unix socket dual listen)
 - **HTTP client**: reqwest (GitHub API forwarding)
-- **Cache storage**: redb (embedded key-value store)
+- **Cache storage**: libsql (embedded SQLite, Turso fork)
 - **CLI**: clap
 - **Tooling**: mise (version management)
 
@@ -75,4 +75,5 @@ fetch  ──(HTTP :8787)───→  (cache)
 - gh CLI: `http_unix_socket` config으로 연결
 - fetch/octokit: `http://localhost:8787` baseUrl로 연결
 - Cache key: `SHA256(token)[:16] + method + URL + query`
-- Invalidation: TTL + ETag conditional requests
+- Invalidation: Entity graph (node_id) + TTL + ETag conditional requests
+- GraphQL: Query caching + mutation invalidation via entity graph
