@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/pleaseai/local-hub/compare/local-hub-v0.4.0...local-hub-v0.5.0) (2026-03-29)
+
+
+### Features
+
+* **cache:** entity graph cache with GraphQL support ([#10](https://github.com/pleaseai/local-hub/issues/10)) ([8e3a3d1](https://github.com/pleaseai/local-hub/commit/8e3a3d13ac074d4df61aba4cdbbc8775ff5fa6eb))
+
 ## [0.4.0](https://github.com/pleaseai/local-hub/compare/local-hub-v0.3.0...local-hub-v0.4.0) (2026-03-28)
 
 
