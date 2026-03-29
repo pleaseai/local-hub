@@ -13,7 +13,7 @@ use std::time::Duration;
 
 use axum::body::Body;
 use http::Request;
-use local_hub::{CacheStore, TtlConfig, build_router, proxy};
+use local_hub::{EntityAwareCache, TtlConfig, build_router, proxy};
 use tower::ServiceExt;
 
 /// Start emulate.dev GitHub service on a specific port.
@@ -49,12 +49,12 @@ fn start_emulate(port: u16) -> Option<Child> {
 }
 
 /// Create an AppState pointing to the emulate.dev server.
-fn create_test_state(emulate_port: u16) -> (Arc<proxy::AppState>, tempfile::TempDir) {
+async fn create_test_state(emulate_port: u16) -> (Arc<proxy::AppState>, tempfile::TempDir) {
     let dir = tempfile::tempdir().unwrap();
-    let db_path = dir.path().join("test-cache.redb");
+    let db_path = dir.path().join("test-cache.db");
 
     let state = Arc::new(proxy::AppState {
-        cache: CacheStore::open(&db_path).unwrap(),
+        cache: EntityAwareCache::open(&db_path).await.unwrap(),
         ttl_config: TtlConfig::new(Duration::from_secs(300)),
         client: reqwest::Client::new(),
         github_base_url: format!("http://127.0.0.1:{emulate_port}"),
@@ -73,7 +73,7 @@ async fn test_cache_miss_then_hit() {
         }
     };
 
-    let (state, _dir) = create_test_state(emulate_port);
+    let (state, _dir) = create_test_state(emulate_port).await;
     let app = build_router(state);
 
     // First request — cache miss
@@ -112,7 +112,7 @@ async fn test_token_isolation() {
         }
     };
 
-    let (state, _dir) = create_test_state(emulate_port);
+    let (state, _dir) = create_test_state(emulate_port).await;
     let app = build_router(state);
 
     // Request with token A — cache miss
@@ -156,7 +156,7 @@ async fn test_write_invalidation() {
         }
     };
 
-    let (state, _dir) = create_test_state(emulate_port);
+    let (state, _dir) = create_test_state(emulate_port).await;
     let app = build_router(state);
 
     // GET issues — cache miss

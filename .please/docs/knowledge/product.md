@@ -34,18 +34,20 @@ Eliminate GitHub API latency and rate limit friction for developers by providing
 1. All GET requests cached transparently
 2. ETag + TTL-based freshness (configurable per-endpoint)
 3. Write requests (POST/PUT/PATCH/DELETE) pass through + invalidate related cache
-4. Token-hash isolation — no privilege leaks between different tokens
+4. GraphQL query caching (POST /graphql with query operations)
+5. Entity graph-based cross-protocol cache invalidation (REST ↔ GraphQL via node_id)
+6. Token-hash isolation — no privilege leaks between different tokens
 
 ### Out of Scope (Phase 1)
 
 - Team shared cache (Phase 3)
 - Web dashboard (Phase 4)
 - GitHub Enterprise Server support
-- GraphQL API caching (REST only in Phase 1)
 
 ## Roadmap
 
 - **Phase 1**: Local proxy with TTL + ETag caching — shipped (v0.3.0)
+- **Phase 1.5**: Entity graph cache invalidation + GraphQL caching — shipped (v0.4.0)
 - **Phase 2**: Webhook-based cache invalidation (via relay-worker)
 - **Phase 3**: Team shared cache (Cloudflare Worker + D1 as L2)
 - **Phase 4**: Web client dashboard (via better-hub) — in progress (`apps/web`)

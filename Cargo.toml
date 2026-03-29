@@ -28,7 +28,7 @@ tracing-subscriber = { version = "0.3", features = [ "env-filter" ] }
 sha2 = "0.10"
 hex = "0.4"
 thiserror = "2"
-redb = "2"
+libsql = "0.6"
 http = "1"
 tower = { version = "0.5", features = [ "util" ] }
 anyhow = "1"
