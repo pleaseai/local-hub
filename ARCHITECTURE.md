@@ -20,12 +20,12 @@ cache namespace prefixes.
 
 ## Entry Points
 
-| Path                            | Purpose                                       |
-| ------------------------------- | --------------------------------------------- |
-| `crates/server/src/main.rs`     | CLI entry point — parses args, starts server  |
+| Path                            | Purpose                                              |
+| ------------------------------- | ---------------------------------------------------- |
+| `crates/server/src/main.rs`     | CLI entry point — parses args, starts server         |
 | `crates/server/CHANGELOG.md`    | Release history — [view](crates/server/CHANGELOG.md) |
-| `.github/workflows/release.yml` | CI/CD — release-please + cross-platform build |
-| `Cargo.toml`                    | Workspace root — dependency versions          |
+| `.github/workflows/release.yml` | CI/CD — release-please + cross-platform build        |
+| `Cargo.toml`                    | Workspace root — dependency versions                 |
 
 ## Module Structure
 
@@ -45,9 +45,9 @@ crates/
 
 ### Planned crates
 
-| Crate    | Purpose                           | Status            |
-| -------- | --------------------------------- | ----------------- |
-| `server` | Proxy server + CLI                | Active            |
+| Crate    | Purpose                           | Status                   |
+| -------- | --------------------------------- | ------------------------ |
+| `server` | Proxy server + CLI                | Active                   |
 | `web`    | Dashboard client (via better-hub) | In progress (`apps/web`) |
 
 ## Data Flow

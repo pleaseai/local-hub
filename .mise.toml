@@ -8,7 +8,7 @@ run = "cargo build --release"
 
 [tasks.dev]
 description = "Run local-hub + web dev server"
-depends = ["build"]
+depends = [ "build" ]
 run = """
 ./target/release/local-hub start &
 cd apps/web && npm run dev
@@ -16,7 +16,7 @@ cd apps/web && npm run dev
 
 [tasks.hub]
 description = "Build and start local-hub"
-depends = ["build"]
+depends = [ "build" ]
 run = "./target/release/local-hub start"
 
 [tasks.web]
