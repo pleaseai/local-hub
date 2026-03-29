@@ -2,13 +2,13 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use clap::{Parser, Subcommand};
-use local_hub::{CacheStore, TtlConfig, proxy, server};
+use local_hub::{EntityAwareCache, TtlConfig, proxy, server};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
 const DEFAULT_PORT: u16 = 8787;
 const DEFAULT_SOCKET: &str = ".local-hub/local-hub.sock";
-const DEFAULT_CACHE_DIR: &str = ".local-hub/cache.redb";
+const DEFAULT_CACHE_DIR: &str = ".local-hub/cache.db";
 const DEFAULT_TTL: u64 = 300;
 
 #[derive(Parser)]
@@ -100,7 +100,7 @@ async fn main() -> anyhow::Result<()> {
             let cache_path = cache_dir.unwrap_or_else(|| resolve_home_path(DEFAULT_CACHE_DIR));
             let socket_path = socket.unwrap_or_else(|| resolve_home_path(DEFAULT_SOCKET));
 
-            let cache = CacheStore::open(&cache_path)?;
+            let cache = EntityAwareCache::open(&cache_path).await?;
             let ttl_config = TtlConfig::new(std::time::Duration::from_secs(ttl));
 
             let client = reqwest::Client::builder()
@@ -134,8 +134,8 @@ async fn main() -> anyhow::Result<()> {
                 println!("No cache database found at {}", cache_path.display());
                 return Ok(());
             }
-            let cache = CacheStore::open(&cache_path)?;
-            let count = cache.count()?;
+            let cache = EntityAwareCache::open(&cache_path).await?;
+            let count = cache.count().await?;
             println!("Cache: {}", cache_path.display());
             println!("Entries: {count}");
         }
@@ -145,15 +145,15 @@ async fn main() -> anyhow::Result<()> {
                 println!("No cache database found at {}", cache_path.display());
                 return Ok(());
             }
-            let cache = CacheStore::open(&cache_path)?;
+            let cache = EntityAwareCache::open(&cache_path).await?;
             match pattern {
                 Some(prefix) => {
-                    let removed = cache.remove_by_prefix(&prefix)?;
+                    let removed = cache.remove_by_prefix(&prefix).await?;
                     println!("Removed {removed} entries matching '{prefix}'");
                 }
                 None => {
-                    let count = cache.count()?;
-                    let removed = cache.remove_by_prefix("")?;
+                    let count = cache.count().await?;
+                    let removed = cache.remove_by_prefix("").await?;
                     println!("Flushed {removed} entries (was {count})");
                 }
             }

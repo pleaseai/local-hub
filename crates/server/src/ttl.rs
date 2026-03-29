@@ -56,6 +56,8 @@ impl Default for TtlConfig {
         config.add_rule("/search", Duration::from_secs(600));
         // Rate limit info should be fresh
         config.add_rule("/rate_limit", Duration::from_secs(30));
+        // GraphQL queries default to 5 minutes (same as REST default)
+        config.add_rule("/graphql", Duration::from_secs(300));
         config
     }
 }
