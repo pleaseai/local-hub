@@ -1,0 +1,25 @@
+codecov.yml
+  46ce4e9552349e80 11-12,14-20,31-33,36-39
+.github/workflows/ci.yml
+  46ce4e9552349e80 147,155
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "1a115f8762c6f874e6233de01b3aa9904f4f1b4b",
+  "prompts": {
+    "46ce4e9552349e80": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b26df1c1-bbf1-4ba7-aa2e-26e1365c4bee",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Minsu Lee <amond@amond.net>",
+      "messages": [],
+      "total_additions": 22,
+      "total_deletions": 16,
+      "accepted_lines": 18,
+      "overriden_lines": 0
+    }
+  }
+}
