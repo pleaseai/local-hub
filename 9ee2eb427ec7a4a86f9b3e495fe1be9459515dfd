@@ -1,0 +1,29 @@
+CLAUDE.md
+  46ce4e9552349e80 40,78-79
+.please/docs/knowledge/product.md
+  46ce4e9552349e80 37-39,50
+.please/docs/tracks/active/entity-graph-cache-20260329/plan.md
+  46ce4e9552349e80 142-144,148-150,154-155,159-162,293-314
+.please/docs/knowledge/tech-stack.md
+  46ce4e9552349e80 20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "9ee2eb427ec7a4a86f9b3e495fe1be9459515dfd",
+  "prompts": {
+    "46ce4e9552349e80": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b26df1c1-bbf1-4ba7-aa2e-26e1365c4bee",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Minsu Lee <amond@amond.net>",
+      "messages": [],
+      "total_additions": 42,
+      "total_deletions": 17,
+      "accepted_lines": 42,
+      "overriden_lines": 0
+    }
+  }
+}
