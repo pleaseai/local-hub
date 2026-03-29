@@ -358,3 +358,31 @@ pub fn graphql_cache_key(token: &str, query: &str, variables: Option<&str>) -> S
 | proxy.rs        | 389         | ~350                   | Yes            |
 | key.rs          | 99          | ~130                   | Yes            |
 | error.rs        | 35          | ~20                    | Yes            |
+
+## Outcomes & Retrospective
+
+### What Was Shipped
+
+- Entity graph cache invalidation replacing parent-path prefix invalidation
+- GraphQL query caching with query/mutation detection
+- Cross-protocol invalidation (REST ↔ GraphQL via node_id entity graph)
+- Storage migration from redb to libsql
+
+### What Went Well
+
+- Unified rewrite approach kept proxy.rs under 500 LOC
+- EntityAwareCache facade cleanly separates storage from proxy logic
+- 62 unit tests cover entity registration, invalidation, and edge cases
+- Code review caught the critical mutation entity extraction gap early
+
+### What Could Improve
+
+- Initial implementation missed entity extraction in mutation handler (fixed during review)
+- store() operations in entity_cache.rs are not wrapped in SQL transactions
+- GraphQL entity extraction is top-level only; nested entities (common in GitHub) are missed
+
+### Tech Debt Created
+
+- entity_cache.rs store/invalidate operations should use SQL transactions for atomicity
+- GraphQL entity extraction should traverse nested objects for more complete dependency tracking
+- Integration tests need cross-protocol invalidation scenarios (REST mutation → GraphQL cache miss)
