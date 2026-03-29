@@ -8,15 +8,16 @@ coverage:
       default:
         target: 80%
 
-flags:
-  unit:
-    paths:
-      - crates/server/src/
+flag_management:
+  default_rules:
     carryforward: true
-  integration:
-    paths:
-      - crates/server/src/
-    carryforward: true
+  individual_flags:
+    - name: unit
+      paths:
+        - crates/server/src/
+    - name: integration
+      paths:
+        - crates/server/src/
 
 component_management:
   default_rules:
@@ -27,9 +28,15 @@ component_management:
     - component_id: cache
       name: Cache
       paths:
-        - crates/server/src/cache.rs
+        - crates/server/src/entity_cache.rs
+        - crates/server/src/storage.rs
+        - crates/server/src/entity.rs
         - crates/server/src/key.rs
         - crates/server/src/ttl.rs
+    - component_id: classify
+      name: Classify
+      paths:
+        - crates/server/src/classify.rs
     - component_id: proxy
       name: Proxy
       paths:

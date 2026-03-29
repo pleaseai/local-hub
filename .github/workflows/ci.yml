@@ -90,12 +90,12 @@ jobs:
           tool: cargo-llvm-cov
 
       - name: Run unit tests with coverage
-        run: cargo llvm-cov --lib --lcov --output-path lcov-unit.info
+        run: cargo llvm-cov --lib --lcov --output-path lcov.info
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: coverage-unit
-          path: lcov-unit.info
+          path: lcov.info
 
   integration-test:
     name: Integration Test
@@ -123,12 +123,12 @@ jobs:
           tool: cargo-llvm-cov
 
       - name: Run integration tests with coverage
-        run: cargo llvm-cov --test integration_test --lcov --output-path lcov-integration.info
+        run: cargo llvm-cov --test integration_test --lcov --output-path lcov.info
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: coverage-integration
-          path: lcov-integration.info
+          path: lcov.info
 
   codecov:
     name: Upload Coverage
@@ -140,12 +140,11 @@ jobs:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: coverage-*
-          merge-multiple: true
 
       - name: Upload unit coverage
         uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe # v5.5.4
         with:
-          files: lcov-unit.info
+          files: coverage-unit/lcov.info
           flags: unit
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -153,7 +152,7 @@ jobs:
       - name: Upload integration coverage
         uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe # v5.5.4
         with:
-          files: lcov-integration.info
+          files: coverage-integration/lcov.info
           flags: integration
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
