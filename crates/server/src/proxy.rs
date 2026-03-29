@@ -50,11 +50,17 @@ pub async fn proxy_handler(State(state): State<Arc<AppState>>, req: Request) -> 
 
     // Read body for non-GET requests (needed for classification and forwarding)
     let body_bytes = if method != "GET" {
-        Some(
-            axum::body::to_bytes(req.into_body(), 10 * 1024 * 1024)
-                .await
-                .unwrap_or_default(),
-        )
+        match axum::body::to_bytes(req.into_body(), 10 * 1024 * 1024).await {
+            Ok(bytes) => Some(bytes),
+            Err(e) => {
+                warn!(error = %e, "failed to read request body");
+                return (
+                    StatusCode::BAD_REQUEST,
+                    format!("failed to read request body: {e}"),
+                )
+                    .into_response();
+            }
+        }
     } else {
         None
     };

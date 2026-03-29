@@ -60,10 +60,9 @@ fn classify_graphql(body: Option<&[u8]>) -> RequestKind {
     }
 }
 
-/// Check if a GraphQL operation text is a mutation.
+/// Check if a GraphQL operation text is a mutation or subscription (non-cacheable).
 fn is_mutation(query: &str) -> bool {
-    // A mutation starts with "mutation" keyword (with optional name)
-    query.starts_with("mutation")
+    query.starts_with("mutation") || query.starts_with("subscription")
 }
 
 #[cfg(test)]

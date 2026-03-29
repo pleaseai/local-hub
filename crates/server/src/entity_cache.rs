@@ -237,8 +237,10 @@ impl EntityAwareCache {
             .conn
             .query("SELECT count(*) FROM cache_entries", ())
             .await?;
-        let row = rows.next().await?.expect("count should return a row");
-        Ok(row.get::<i64>(0)? as usize)
+        match rows.next().await? {
+            Some(row) => Ok(row.get::<i64>(0)? as usize),
+            None => Ok(0),
+        }
     }
 
     /// Update an existing cache entry (e.g., refresh TTL after 304).
